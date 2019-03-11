@@ -13,6 +13,8 @@ find_package(catkin REQUIRED COMPONENTS
   roscpp
   sensor_msgs
 )
+find_package(PCL  REQUIRED )
+
 
 ## System dependencies are found with CMake's conventions
 # find_package(Boost REQUIRED COMPONENTS system)
@@ -119,14 +121,20 @@ catkin_package(
 include_directories(
 # include
   ${catkin_INCLUDE_DIRS}
+  ${PCL_INCLUDE_DIRS}
 )
+
+
+#link_directories(${PCL_LIBRARY_DIRS})
 
 add_executable(example src/example.cpp)
 add_executable(segmentation src/segmentation.cpp)
 add_executable(segmentation2 src/segmentation2.cpp)
+add_executable(segmentationCUDA src/segmentationCUDA.cpp)
 target_link_libraries(example ${catkin_LIBRARIES})
 target_link_libraries(segmentation ${catkin_LIBRARIES})
 target_link_libraries(segmentation2 ${catkin_LIBRARIES})
+target_link_libraries(segmentationCUDA ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}
