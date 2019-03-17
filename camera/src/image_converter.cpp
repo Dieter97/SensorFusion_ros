@@ -28,14 +28,14 @@ public:
         cv::namedWindow(OPENCV_WINDOW);
 
         // Load names of classes
-        std::string classesFile = "/home/dieter/Ros/catkin_ws_sensorfusion/src/camera/src/yolo/coco.names";
+        std::string classesFile = "/home/dieter/darknet/data/coco.names";
         std::ifstream ifs(classesFile.c_str());
         std::string line;
         while (getline(ifs, line)) classes.push_back(line);
 
         // Give the configuration and weight files for the model
-        std::string modelConfiguration = "/home/dieter/Ros/catkin_ws_sensorfusion/src/camera/src/yolo/yolov3.cfg";
-        std::string modelWeights = "/home/dieter/Ros/catkin_ws_sensorfusion/src/camera/src/yolo/yolov3.weights";
+        std::string modelConfiguration = "/home/dieter/darknet/cfg/yolov2-tiny.cfg";
+        std::string modelWeights = "/home/dieter/darknet/data/yolov2-tiny.weights";
 
         // Load the network
         net = cv::dnn::readNetFromDarknet(modelConfiguration, modelWeights);
