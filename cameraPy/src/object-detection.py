@@ -3,7 +3,7 @@ from __future__ import print_function
 
 # import roslib
 # roslib.load_manifest('my_package')
-from time import sleep
+import time
 
 import numpy as np
 import sys
@@ -17,7 +17,7 @@ import os.path
 import sys, os
 sys.path.append(os.path.join(os.getcwd(),'python/'))
 
-from darknet import *
+import darknet as dn
 
 class image_converter:
 
@@ -25,26 +25,35 @@ class image_converter:
         self.image_pub = rospy.Publisher("/camera/detection/out", Image)
 
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, self.callback)
+        self.image_sub = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, self.callback,queue_size=1)
         # Give the configuration and weight files for the model and load the network using them.
-        modelConfiguration = b"/home/dieter/darknet/cfg/yolov2-tiny.cfg"
-        modelWeights = b"/home/dieter/darknet/data/yolov2-tiny.weights"
+        modelConfiguration = b"/home/dieter/darknet/cfg/yolov3-tiny.cfg"
+        modelWeights = b"/home/dieter/darknet/data/yolov3-tiny.weights"
 
-        self.net = load_net(modelConfiguration, modelWeights, 0)
-        self.meta = load_meta(b"/home/dieter/darknet/cfg/coco.data")
+        dn.set_gpu(0)
+
+        self.net = dn.load_net(modelConfiguration, modelWeights, 0)
+        self.meta = dn.load_meta(b"/home/dieter/darknet/cfg/coco.data")
 
     def callback(self, data):
         try:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
+        start = time.time()
 
         # Save image on temporary location for object detection
         cv2.imwrite('/tmp/tmp.png', cv_image)
-        #sleep(0.2)
-        r = detect(self.net, self.meta, b"/tmp/tmp.png")
+        #im = self.array_to_image(cv_image)
+        #dn.rgbgr_image(im)
 
+        r = dn.detect(self.net, self.meta, b"/tmp/tmp.png")
+
+        #r = dn.detect2(self.net, self.meta, im)
         cv_image = self.drawPredicions(cv_image,r,0.6)
+
+        end = time.time()
+        print("YOLO prediction took %f seconds" % (end - start))
 
         #cv2.imshow("Image window",  self.cv_image)
         #cv2.waitKey(3)
@@ -66,6 +75,16 @@ class image_converter:
                 cv2.putText(image,prediction[0],(x-w,y-h-5),font,2,(255,255,0))
         return image
 
+
+    def array_to_image(self,arr):
+        arr = arr.transpose(2,0,1)
+        c = arr.shape[0]
+        h = arr.shape[1]
+        w = arr.shape[2]
+        arr = (arr/255.0).flatten()
+        data = dn.c_array(dn.c_float, arr)
+        im = dn.IMAGE(w,h,c,data)
+        return im
 
 def main(args):
     ic = image_converter()

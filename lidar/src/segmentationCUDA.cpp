@@ -97,8 +97,8 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     std::vector<pcl::PointIndices> cluster_indices_gpu;
     pcl::gpu::EuclideanClusterExtraction gec;
-    gec.setClusterTolerance(0.02); // 2cm
-    gec.setMinClusterSize(0);
+    gec.setClusterTolerance(0); // 2cm
+    gec.setMinClusterSize(10);
     gec.setMaxClusterSize(25000);
     gec.setSearchMethod(octree_device);
     gec.setHostCloud(cloud);

@@ -54,7 +54,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::fromPCLPointCloud2(*cloud2, *cloud);
 
 
-    // Create a search tree, use KDTreee for non-organized data.
+    // Create a search tree, use KDTree for non-organized data.
     pcl::search::Search<pcl::PointXYZRGB>::Ptr tree;
     if (cloud->isOrganized()) {
         tree.reset(new pcl::search::OrganizedNeighbor<pcl::PointXYZRGB>());
