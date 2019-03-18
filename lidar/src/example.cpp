@@ -9,7 +9,7 @@
 
 ros::Publisher pub;
 
-uint8_t randomColorValue(){
+uint8_t randomColorValue() {
     return std::rand() % 255;
 }
 
@@ -29,19 +29,19 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     //for (pcl::PointXYZRGB point : test->points) {
     std::cout << "Size of pointcloud: " << (test->points).size() << std::endl;
-        for(int i = 0 ; i < test->points.size();i++) {
-            uint8_t r,g,b;
-            if(i < test->points.size() / 2)
-                 r = 0, g = 255, b = 0;    // Example: Red color
-            else
-                 r = 0, g = 0, b = 255;    // Example: Red color
-            //uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)g << 8 | (uint32_t)b);
-            //test->points[i].rgb = (float)(rgb);
-            test->points[i].r = randomColorValue();
-            test->points[i].g = randomColorValue();
-            test->points[i].b = randomColorValue();
-            //std::cout << test->points[i].rgb << std::endl;
-        }
+    for (int i = 0; i < test->points.size(); i++) {
+        uint8_t r, g, b;
+        if (i < test->points.size() / 2)
+            r = 0, g = 255, b = 0;    // Example: Red color
+        else
+            r = 0, g = 0, b = 255;    // Example: Red color
+        //uint32_t rgb = ((uint32_t)r << 16 | (uint32_t)g << 8 | (uint32_t)b);
+        //test->points[i].rgb = (float)(rgb);
+        test->points[i].r = randomColorValue();
+        test->points[i].g = randomColorValue();
+        test->points[i].b = randomColorValue();
+        //std::cout << test->points[i].rgb << std::endl;
+    }
 
     //}
 
@@ -62,7 +62,6 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     // Publish the data
     pub.publish(output);
 }
-
 
 
 int main(int argc, char **argv) {

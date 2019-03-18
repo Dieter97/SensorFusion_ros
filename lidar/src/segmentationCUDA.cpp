@@ -22,64 +22,26 @@
 #include <pcl/gpu/containers/device_array.hpp>
 #include <pcl/gpu/segmentation/gpu_extract_clusters.h>
 #include <pcl/gpu/segmentation/impl/gpu_extract_clusters.hpp>
-
 #include <time.h>
 
 ros::Publisher pub;
 
 void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
+    int device = 0;
+
     // Container for original & filtered data
     pcl::PCLPointCloud2 *cloud2 = new pcl::PCLPointCloud2;
     pcl::PCLPointCloud2ConstPtr cloudPtr(cloud2);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // Convert to PCL data type
     pcl_conversions::toPCL(*cloud_msg, *cloud2);
     pcl::fromPCLPointCloud2(*cloud2, *cloud);
-
-    /*
-    /////////////////////////////////////////////
-    /// CPU VERSION
-    /////////////////////////////////////////////
-
-    std::cout << "INFO: PointCloud_filtered still has " << cloud->points.size() << " Points " << std::endl;
-    clock_t tStart = clock();
-    // Creating the KdTree object for the search method of the extraction
-    pcl::search::KdTree<pcl::PointXYZ>::Ptr tree(new pcl::search::KdTree<pcl::PointXYZ>);
-    tree->setInputCloud(cloud);
-
-    std::vector<pcl::PointIndices> cluster_indices;
-    pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(0.02); // 2cm
-    ec.setMinClusterSize(100);
-    ec.setMaxClusterSize(25000);
-    ec.setSearchMethod(tree);
-    ec.setInputCloud(cloud);
-    ec.extract(cluster_indices);
-
-    printf("CPU Time taken: %.2fs\n", (double) (clock() - tStart) / CLOCKS_PER_SEC);
-
-    int j = 0;
-    for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin();
-         it != cluster_indices.end(); ++it) {
-        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_cluster(new pcl::PointCloud<pcl::PointXYZ>);
-        for (std::vector<int>::const_iterator pit = it->indices.begin(); pit != it->indices.end(); ++pit)
-            cloud_cluster->points.push_back(cloud->points[*pit]); //
-        cloud_cluster->width = cloud_cluster->points.size();
-        cloud_cluster->height = 1;
-        cloud_cluster->is_dense = true;
-
-        std::cout << "PointCloud representing the Cluster: " << cloud_cluster->points.size() << " data points."
-                  << std::endl;
-        std::stringstream ss;
-        //ss << "cloud_cluster_" << j << ".pcd";
-        //writer.write<pcl::PointXYZ>(ss.str(), *cloud_cluster, false); ///
-        j++;
-
-
-    }*/
-
+/*
+    pcl::gpu::setDevice (device);
+    pcl::gpu::printShortCudaDeviceInfo (device);
+*/
     /////////////////////////////////////////////
     /// GPU VERSION
     /////////////////////////////////////////////
@@ -97,13 +59,14 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     std::vector<pcl::PointIndices> cluster_indices_gpu;
     pcl::gpu::EuclideanClusterExtraction gec;
-    gec.setClusterTolerance(0); // 2cm
+    gec.setClusterTolerance(0.02); // 2cm
     gec.setMinClusterSize(10);
     gec.setMaxClusterSize(25000);
+    gec.setInput(cloud_device);
     gec.setSearchMethod(octree_device);
     gec.setHostCloud(cloud);
     gec.extract(cluster_indices_gpu);
-//  octree_device.clear();
+    //octree_device.clear();
 
     printf("GPU Time taken: %.2fs\n", (double) (clock() - tStart) / CLOCKS_PER_SEC);
     std::cout << "INFO: stopped with the GPU version" << std::endl;

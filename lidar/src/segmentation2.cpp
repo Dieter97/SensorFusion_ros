@@ -28,7 +28,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::PCLPointCloud2 *cloud2 = new pcl::PCLPointCloud2;
     pcl::PCLPointCloud2ConstPtr cloudPtr(cloud2);
 
-    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud (new pcl::PointCloud<pcl::PointXYZ>);
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>);
     // Convert to PCL data type
     pcl_conversions::toPCL(*cloud_msg, *cloud2);
     pcl::fromPCLPointCloud2(*cloud2, *cloud);
@@ -46,7 +46,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     std::vector<pcl::PointIndices> cluster_indices;
     pcl::EuclideanClusterExtraction<pcl::PointXYZ> ec;
-    ec.setClusterTolerance(0); // 2cm
+    ec.setClusterTolerance(0.02); // 2cm
     ec.setMinClusterSize(100);
     ec.setMaxClusterSize(25000);
     ec.setSearchMethod(tree);
@@ -90,7 +90,8 @@ int main(int argc, char *argv[]) {
     ros::NodeHandle nh;
 
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1, cloud_cb);
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1,
+                                                                 cloud_cb);
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::PointCloud2>("output", 1);
