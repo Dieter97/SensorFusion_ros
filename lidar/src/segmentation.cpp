@@ -32,15 +32,15 @@ void randomColorValue(pcl::PointCloud<pcl::PointXYZRGBNormal>::Ptr cloud) {
 void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     ///The smallest scale to use in the DoN filter.
-    double scale1 = 10;
+    double scale1 = 0.2;
     ///The largest scale to use in the DoN filter.
-    double scale2 = 25;
+    double scale2 = 2;
 
     ///The minimum DoN magnitude to threshold by
-    double threshold = 0.1;
+    double threshold = 0.01;
 
     ///segment scene into clusters with given distance tolerance using euclidean clustering
-    double segradius = 0.5;
+    double segradius = 0.02;
 
     // Container for original & filtered data
     pcl::PCLPointCloud2 *cloud2 = new pcl::PCLPointCloud2;
