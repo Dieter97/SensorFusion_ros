@@ -2,27 +2,27 @@
 // PCL specific includes
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl-1.9/pcl/point_cloud.h>
-#include <pcl-1.9/pcl/point_types.h>
-#include <pcl-1.9/pcl/filters/crop_box.h>
-#include <pcl-1.9/pcl/ModelCoefficients.h>
-#include <pcl-1.9/pcl/point_types.h>
-#include <pcl-1.9/pcl/io/pcd_io.h>
-#include <pcl-1.9/pcl/filters/extract_indices.h>
-#include <pcl-1.9/pcl/filters/voxel_grid.h>
-#include <pcl-1.9/pcl/features/normal_3d.h>
-#include <pcl-1.9/pcl/kdtree/kdtree.h>
-#include <pcl-1.9/pcl/sample_consensus/method_types.h>
-#include <pcl-1.9/pcl/sample_consensus/model_types.h>
-#include <pcl-1.9/pcl/segmentation/sac_segmentation.h>
-#include <pcl-1.9/pcl/segmentation/extract_clusters.h>
-
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/filters/crop_box.h>
+#include <pcl/ModelCoefficients.h>
+#include <pcl/point_types.h>
+#include <pcl/io/pcd_io.h>
+#include <pcl/filters/extract_indices.h>
+#include <pcl/filters/voxel_grid.h>
+#include <pcl/features/normal_3d.h>
+#include <pcl/kdtree/kdtree.h>
+#include <pcl/sample_consensus/method_types.h>
+#include <pcl/sample_consensus/model_types.h>
+#include <pcl/segmentation/sac_segmentation.h>
+#include <pcl/segmentation/extract_clusters.h>
+#include <unistd.h>
 // The GPU specific stuff here
-#include <pcl-1.9/pcl/gpu/octree/octree.hpp>
-#include <pcl-1.9/pcl/gpu/containers/device_array.hpp>
-#include <pcl-1.9/pcl/gpu/segmentation/gpu_extract_clusters.h>
-#include <pcl-1.9/pcl/gpu/segmentation/impl/gpu_extract_clusters.hpp>
-#include <pcl-1.9/pcl/gpu/containers/initialization.h>
+#include <pcl/gpu/octree/octree.hpp>
+#include <pcl/gpu/containers/device_array.hpp>
+#include <pcl/gpu/segmentation/gpu_extract_clusters.h>
+#include <pcl/gpu/segmentation/impl/gpu_extract_clusters.hpp>
+#include <pcl/gpu/containers/initialization.h>
 #include <time.h>
 
 ros::Publisher pub;

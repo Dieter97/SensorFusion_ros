@@ -16,8 +16,7 @@
 ros::Publisher pub;
 int segTresh = 0;
 
-uint8_t randomColorV1
-alue() {
+uint8_t randomColorValue() {
     return std::rand() % 255;
 }
 
