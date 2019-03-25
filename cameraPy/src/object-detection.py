@@ -40,19 +40,19 @@ class image_converter:
             cv_image = self.bridge.imgmsg_to_cv2(data, "bgr8")
         except CvBridgeError as e:
             print(e)
-        start = time.time()
+
 
         # Save image on temporary location for object detection
         cv2.imwrite('/tmp/tmp.png', cv_image)
         #im = self.array_to_image(cv_image)
         #dn.rgbgr_image(im)
-
+        start = time.time()
         r = dn.detect(self.net, self.meta, b"/tmp/tmp.png")
-
-        #r = dn.detect2(self.net, self.meta, im)
-        cv_image = self.drawPredicions(cv_image,r,0.6)
-
         end = time.time()
+        #r = dn.detect2(self.net, self.meta, im)
+        #cv_image = self.drawPredicions(cv_image,r,0.6)
+
+
         print("YOLO prediction took %f seconds" % (end - start))
 
         #cv2.imshow("Image window",  self.cv_image)

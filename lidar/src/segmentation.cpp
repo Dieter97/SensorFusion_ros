@@ -37,7 +37,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     double scale2 = 2;
 
     ///The minimum DoN magnitude to threshold by
-    double threshold = 0.01;
+    double threshold = 2;
 
     ///segment scene into clusters with given distance tolerance using euclidean clustering
     double segradius = 0.02;
