@@ -8,11 +8,14 @@ project(sensor_fusion_msg)
 ## if COMPONENTS list like find_package(catkin REQUIRED COMPONENTS xyz)
 ## is used, also find other catkin packages
 find_package(catkin REQUIRED COMPONENTS
+  pcl_conversions
+  pcl_ros
   actionlib_msgs
   geometry_msgs
   message_generation
   sensor_msgs
   std_msgs
+  pcl_msgs
 )
 
 ## System dependencies are found with CMake's conventions
@@ -51,8 +54,9 @@ find_package(catkin REQUIRED COMPONENTS
 ## Generate messages in the 'msg' folder
  add_message_files(
    FILES
-   ObjectBoundingBox.msg
+         ObjectBoundingBox.msg
          CameraObjects.msg
+         LidarClusters.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -76,6 +80,7 @@ find_package(catkin REQUIRED COMPONENTS
          geometry_msgs
          sensor_msgs
          std_msgs
+         pcl_msgs
  )
 
 ###################################

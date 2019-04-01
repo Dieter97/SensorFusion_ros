@@ -26,8 +26,8 @@ class image_converter:
         self.bridge = CvBridge()
         self.image_sub = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, self.callback, buff_size=100, queue_size=30)
         # Give the configuration and weight files for the model and load the network using them.
-        modelConfiguration = b"/home/dieter/darknet/cfg/yolov2-tiny.cfg"
-        modelWeights = b"/home/dieter/darknet/data/yolov2-tiny.weights"
+        modelConfiguration = b"/home/dieter/darknet/cfg/yolov3.cfg"
+        modelWeights = b"/home/dieter/darknet/data/yolov3.weights"
 
         dn.set_gpu(0)
 
