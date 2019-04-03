@@ -62,6 +62,9 @@
   <exec_depend>sensor_msgs</exec_depend>
   <exec_depend>std_msgs</exec_depend>
 
+  <build_depend>sensor_fusion_msg</build_depend>
+  <exec_depend>sensor_fusion_msg</exec_depend>
+
 
   <!-- The export tag contains other, unspecified, tags -->
   <export>

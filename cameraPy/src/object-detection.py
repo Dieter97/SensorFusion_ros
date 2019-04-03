@@ -79,7 +79,6 @@ class image_converter:
                 cv2.putText(image,prediction[0],(x-w,y-h-5),font,2,(255,255,0))
         return image
 
-
     def array_to_image(self,arr):
         arr = arr.transpose(2,0,1)
         c = arr.shape[0]

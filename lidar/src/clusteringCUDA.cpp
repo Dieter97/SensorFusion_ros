@@ -151,11 +151,11 @@ int main(int argc, char *argv[]) {
     std::cin >> segTresh;
 
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1,
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 10,
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2>("output", 1);
+    pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/clusters", 10);
 
     // Spin
     ros::spin();
