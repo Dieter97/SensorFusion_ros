@@ -9,8 +9,8 @@
 #include <pcl/conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
-#include "../../../devel/include/sensor_fusion_msg/ObjectBoundingBox.h"
-#include "../../../devel/include/sensor_fusion_msg/CameraObjects.h"
+#include <sensor_fusion_msg/ObjectBoundingBox.h>
+#include <sensor_fusion_msg/CameraObjects.h>
 
 void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     std::cout << "Cloud received" << std::endl;

@@ -11,6 +11,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(PCL  REQUIRED )
 
+#For some reason msg have to be included like this
+include_directories(../../devel/include)
 
 catkin_package(
 #  INCLUDE_DIRS include
@@ -30,5 +32,6 @@ include_directories(
 )
 
 add_executable(lidar_camera_fusion src/lidar_camera_fusion.cpp)
-add_dependencies(lidar_camera_fusion ${catkin_EXPORTED_TARGETS})
+#add_dependencies(lidar_camera_fusion ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lidar_camera_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES} )
+add_dependencies(lidar_camera_fusion sensor_fusion_msg_generate_messages_cpp)
