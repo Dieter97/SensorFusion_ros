@@ -56,10 +56,10 @@ class image_converter:
                 object = ObjectBoundingBox()
                 object.Class = prediction[0]
                 object.probability = prediction[1]
-                object.xmin = int(prediction[2][0])
-                object.xmax = int(prediction[2][1])
-                object.ymin = int(prediction[2][2])
-                object.ymax = int(prediction[2][3])
+                object.xmin = (prediction[2][0])
+                object.xmax = (prediction[2][1])
+                object.ymin = (prediction[2][2])
+                object.ymax = (prediction[2][3])
                 objects.append(object)
         objectMsg = CameraObjects()
         objectMsg.header = Header()

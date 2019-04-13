@@ -6,6 +6,7 @@ import sys
 # import roslib
 # roslib.load_manifest('my_package')
 import time
+from math import floor
 
 import cv2
 import rospy
@@ -43,10 +44,10 @@ class image_converter:
 
     def drawPredicions(self,image, predictions):
         for prediction in predictions.bounding_boxes:
-            x = prediction.xmin
-            y = prediction.xmax
-            w = prediction.ymin
-            h = prediction.ymax
+            x = int(prediction.xmin)
+            y = int(prediction.xmax)
+            w = int(prediction.ymin)
+            h = int(prediction.ymax)
             cv2.rectangle(image,(x-w,y-h),(x+w,y+h),(0,255,0),2)
             font = cv2.FONT_HERSHEY_PLAIN
             cv2.putText(image,prediction.Class,(x-w,y-h-5),font,2,(255,255,0))
