@@ -26,8 +26,20 @@ using namespace message_filters;
 
 ros::Publisher pub;
 
-void callback(const ImageConstPtr& image, const PointCloud2ConstPtr& cloud_msg)
-{
+int scaleX = 20;
+int scaleY = 30;
+float camera_plane = 0.2;
+
+float * perspectiveMapping(float x1, float y1, float z1, float cameraPlane) {
+    float k = (cameraPlane - x1)/x1;
+    static float result[3];
+    result[0] = x1 + (k * x1);
+    result[1] = y1 + (k * y1);
+    result[2] = z1 + (k * z1);
+    return result;
+}
+
+void callback(const ImageConstPtr& image, const PointCloud2ConstPtr& cloud_msg) {
     std::cout << "Cloud received" << std::endl;
 
     // First handle PointCloud Data
@@ -50,14 +62,16 @@ void callback(const ImageConstPtr& image, const PointCloud2ConstPtr& cloud_msg)
     }
 
     // Go through all pointcloud points to draw them on the image
-    int x_camera = 0;
-    int y_camera = 0;
-    int scale = 1000;
+    float camera_plane = 0.2;
     for(auto it = pclCloud->begin(); it!= pclCloud->end(); it++){
-        float x_inverse =  (1 * scale) / (it->x*scale);
-        int new_X = (int)((((it->y*scale) - x_camera) * x_inverse) + x_camera);  //(int) (it->y*scale*x_inverse)+xOffset;
-        int new_Y = (int)((((it->z*scale) - y_camera) * x_inverse) + y_camera);  //(int)(it->z*scale*x_inverse)+yOffset);
-        cv::circle(cv_ptr->image,cv::Point(new_X+672,-new_Y+188),1,cv::Scalar( 0, 0, 255 ),cv::FILLED,cv::LINE_8);
+        float x_inverse =  (-1) / (it->x);
+        float new_X = (int) (it->y * x_inverse * -camera_plane);  //(int)((((it->y*scale) - x_camera) * x_inverse) + x_camera)
+        float new_Y = (int) (it->z * x_inverse * -camera_plane);  //(int)((((it->z*scale) - y_camera) * x_inverse) + y_camera)
+        float * p;
+        p = perspectiveMapping(it->x,it->y,it->z,camera_plane);
+        new_X =  *(p+1);// * 0.5935f;  //(int)((((it->y*scale) - x_camera) * x_inverse) + x_camera)
+        new_Y =  *(p+2);// * 0.5935f;
+        cv::circle(cv_ptr->image,cv::Point((int)((new_X*scaleX)+672),(int)((new_Y*scaleY)+188)),1,cv::Scalar( 0, (int) it->z*10, 255 ),cv::FILLED,cv::LINE_8);
     }
 
     pub.publish(cv_ptr->toImageMsg());
@@ -70,6 +84,13 @@ int main(int argc, char** argv)
     ros::init(argc, argv, "vision_node");
 
     ros::NodeHandle nh;
+
+    std::cout << "X_Scale: ";
+    std::cin >> scaleX;
+    std::cout << "Y_Scale: ";
+    std::cin >> scaleY;
+    std::cout << "Projection plane: ";
+    std::cin >> camera_plane;
 
     message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 1);
     message_filters::Subscriber<PointCloud2> info_sub(nh, "output", 1);
