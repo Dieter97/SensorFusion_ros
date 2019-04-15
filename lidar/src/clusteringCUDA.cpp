@@ -136,6 +136,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         pcl::toPCLPointCloud2(*cloud_cluster_gpu, out);
         pcl_conversions::moveFromPCL(out, output);
         output.header.frame_id = cloud_msg->header.frame_id;
+        output.header.stamp = cloud_msg->header.stamp;
         // Publish the data
         pub.publish(output);
     }

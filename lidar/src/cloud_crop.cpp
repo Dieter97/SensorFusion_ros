@@ -49,12 +49,38 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     boxFilter.setInputCloud(test);
     boxFilter.filter(*filtered);
 
+    pcl::PointCloud<pcl::PointXYZ>::Ptr groundRemoved(new pcl::PointCloud<pcl::PointXYZ>);
+
+    // perform ransac planar filtration to remove ground plane
+    pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
+    pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
+    // Create the segmentation object
+    pcl::SACSegmentation<pcl::PointXYZ> seg1;
+    // Optional
+    seg1.setOptimizeCoefficients (true);
+    // Mandatory
+    seg1.setModelType (pcl::SACMODEL_PLANE);
+    seg1.setMethodType (pcl::SAC_RANSAC);
+    seg1.setDistanceThreshold (0.4);
+    seg1.setInputCloud (filtered);
+    seg1.segment (*inliers, *coefficients);
+
+    int i = 0;
+    for(pcl::PointCloud<pcl::PointXYZ>::iterator it = filtered->begin(); it!= filtered->end(); it++){
+        if(!(std::find(inliers->indices.begin(), inliers->indices.end(), i) != inliers->indices.end())){
+            groundRemoved->points.push_back(*it);
+        }
+        i++;
+    }
+
+
      // Convert to ROS data type
      sensor_msgs::PointCloud2 output;
      pcl::PCLPointCloud2 out;
-     pcl::toPCLPointCloud2(*filtered, out);
+     pcl::toPCLPointCloud2(*groundRemoved, out);
      pcl_conversions::moveFromPCL(out, output);
      output.header.frame_id = cloud_msg->header.frame_id;
+     output.header.stamp = cloud_msg->header.stamp;
      // Publish the data
      pub.publish(output);
 }
@@ -73,7 +99,7 @@ int main(int argc, char **argv) {
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2>("output", 1);
+    pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/clusters", 1);
 
     // Spin
     ros::spin();
