@@ -45,11 +45,11 @@ class image_converter:
         start = time.time()
         r = dn.detect(self.net, self.meta, b"/tmp/tmp.png")
         end = time.time()
-        self.generateMsg(r, 0.6)
+        self.generateMsg(r, 0.6, data.header.stamp)
 
         print("YOLO prediction took %f seconds" % (end - start))
 
-    def generateMsg(self, predictions, threshold):
+    def generateMsg(self, predictions, threshold, timeStamp):
         objects = []
         for prediction in predictions:
             if prediction[1] > threshold:
@@ -65,6 +65,7 @@ class image_converter:
         objectMsg.header = Header()
         objectMsg.header.stamp = rospy.Time.now()
         objectMsg.bounding_boxes = objects
+        #objectMsg.header.stamp = timeStamp
         self.image_pub.publish(objectMsg)
 
     def drawPredicions(self,image,predictions,threshold):

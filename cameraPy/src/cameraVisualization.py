@@ -26,7 +26,7 @@ class image_converter:
         self.bridge = CvBridge()
         self.image_sub = message_filters.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, queue_size = 10)
         self.prediction_seb = message_filters.Subscriber("/camera/detection/out/", CameraObjects, queue_size=1)
-        self.ts = message_filters.ApproximateTimeSynchronizer([self.image_sub, self.prediction_seb], 10, slop=0.000000001)
+        self.ts = message_filters.ApproximateTimeSynchronizer([self.image_sub, self.prediction_seb], 10, slop=0.1)
         self.ts.registerCallback(self.callback)
 
     def callback(self, image, predictions):
