@@ -1,6 +1,6 @@
 string Class
 float64 probability
-float32 xmin
-float32 ymin
-float32 xmax
-float32 ymax
+float32 x
+float32 y
+float32 w
+float32 h

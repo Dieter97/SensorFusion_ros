@@ -47,6 +47,10 @@ public:
         this->mapPoint();
     }
 
+    /*~MappedPoint() {
+        delete(&this->point);
+    }*/
+
     float mapPoint() {
         float *p;
         p = perspectiveMapping(point.x, point.y, point.z, cameraPlane);
@@ -86,6 +90,58 @@ public:
     void setPictureY(float pictureY) {
         MappedPoint::pictureY = pictureY;
     }
+};
+
+class FusedObject{
+public:
+    ObjectBoundingBox* cameraData;
+    std::vector<MappedPoint> *lidarPoints;
+    int r,g,b;
+
+public:
+
+    FusedObject(ObjectBoundingBox *cameraData) {
+        this->cameraData = cameraData;
+        this->lidarPoints = new std::vector<MappedPoint>;
+        this->setRandomColor();
+    }
+
+    FusedObject(ObjectBoundingBox *cameraData, std::vector<MappedPoint> *points) {
+        this->cameraData = cameraData;
+        this->lidarPoints = points;
+    }
+
+    void setColor(int r, int g, int b) {
+        this->r = r;
+        this->g = g;
+        this->b = b;
+    }
+
+    void setRandomColor(){
+        this->r = std::rand() % 255;;
+        this->g = std::rand() % 255;;
+        this->b = std::rand() % 255;;
+    }
+
+    void addPoint(const MappedPoint& point) {
+        this->lidarPoints->emplace_back(point);
+    }
+
+    void drawObject(const cv_bridge::CvImagePtr &imagePtr) {
+        //Draw the bounding box first
+        cv::Point pt1((int)(cameraData->x-cameraData->w/2), (int)(cameraData->y-cameraData->h/2));
+        cv::Point pt2((int)(cameraData->x+cameraData->w/2), (int)(cameraData->y+cameraData->h/2));
+        cv::rectangle(imagePtr->image, pt1, pt2, cv::Scalar(b,g,r));
+
+        //Draw the lidar points
+        for (auto it = lidarPoints->begin(); it != lidarPoints->end(); it++) {
+            int thickness = 6 - (int) it->map(it->getDistance(), 0, 100, 1, 5);
+            cv::circle(imagePtr->image, cv::Point((int) it->getPictureX(), (int) it->getPictureY()),
+                       thickness,
+                       cv::Scalar(b,g,r), cv::FILLED, cv::LINE_8);
+        }
+    }
+
 };
 
 
@@ -134,23 +190,36 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, 
         return;
     }
 
-    // Go through all pointcloud points to draw them on the image
+    auto * fusedObjects = new std::vector<FusedObject*>;
+
+
+    // Convert cameraObjects into fused objects
+    for (const auto &bounding_box : objects->bounding_boxes) {
+        auto boundingBox = new ObjectBoundingBox();
+        boundingBox->x = bounding_box.x;
+        boundingBox->y = bounding_box.y;
+        boundingBox->w = bounding_box.w;
+        boundingBox->h = bounding_box.h;
+        boundingBox->Class = bounding_box.Class;
+        boundingBox->probability = bounding_box.probability;
+        fusedObjects->emplace_back(new FusedObject(boundingBox));
+    }
+
+    // Go through all pointcloud points to associate them with a bounding box
     for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
         // First map the point to image coordinates
-        auto mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.2); //Scale is predetermined at -3500
+        auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.2); //Scale is predetermined at -3500
 
         // Associate the points to a detected object
-        for (auto oit = objects->bounding_boxes.begin(); oit != objects->bounding_boxes.end(); oit++) {
-            std::cout << "Detected object: " << oit->Class << std::endl;
-
-
-            //Draw the object
-            cv::Point pt1((int)(oit->xmin-oit->ymin), (int)(oit->ymin-oit->ymax));
-            // and its bottom right corner.
-            cv::Point pt2((int)(oit->xmin+oit->ymin), (int)(oit->ymin+oit->ymax));
-            cv::rectangle(cv_ptr->image, pt1, pt2, cv::Scalar(0, 255, 0));
+        for(const auto &fusedObject: *fusedObjects) {
+            ObjectBoundingBox *box = fusedObject->cameraData;
+            if (box->x-box->w/2 < mappedPoint->getPictureX() && mappedPoint->getPictureX() < box->x+box->w/2) {
+                if (box->y-box->h/2 < mappedPoint->getPictureY() && mappedPoint->getPictureY() < box->y+box->h/2) {
+                    fusedObject->addPoint(*mappedPoint);
+                }
+            }
         }
-
+        /*
         // Draw the point
         if (mappedPoint->getDistance() > max) max = mappedPoint->getDistance();
         float color = map(mappedPoint->getDistance(), 0, max, 0, 255);
@@ -159,6 +228,12 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, 
         cv::circle(cv_ptr->image, cv::Point((int) mappedPoint->getPictureX(), (int) mappedPoint->getPictureY()),
                    thickness,
                    cv::Scalar((int) color, 255 - (it->z * 10), 0), cv::FILLED, cv::LINE_8);
+        */
+    }
+
+    // Convert cameraObjects into fused objects
+    for(const auto &fusedObject: *fusedObjects) {
+        fusedObject->drawObject(cv_ptr);
     }
 
 
@@ -167,12 +242,12 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, 
 }
 
 int main(int argc, char **argv) {
-    ros::init(argc, argv, "vision_node");
+    ros::init(argc, argv, "feature_based_fuser");
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 1);
-    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/clusters", 1);
+    message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 10);
+    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/clusters", 10);
     message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2, CameraObjects> MySyncPolicy;
 

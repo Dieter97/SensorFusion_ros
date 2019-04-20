@@ -1,0 +1,6 @@
+<launch>
+    <node name="cloud_crop" pkg="lidar" type="cloud_crop" />
+    <node name="object_detector" pkg="cameraPy" type="object-detection.py" />
+
+</launch>
+<!--<node name="feature_based_fuser" pkg="fusion" type="lidar_object_fusion" />-->

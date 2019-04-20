@@ -18,13 +18,13 @@ sys.path.append(os.path.join(os.getcwd(),'python/'))
 
 import darknet as dn
 
-class image_converter:
+class object_detector:
 
     def __init__(self):
         self.image_pub = rospy.Publisher("/camera/detection/out", CameraObjects)
 
         self.bridge = CvBridge()
-        self.image_sub = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, self.callback, buff_size=100, queue_size=30)
+        self.image_sub = rospy.Subscriber("/carla/ego_vehicle/camera/rgb/front/image_color", Image, self.callback, buff_size=150, queue_size=1)
         # Give the configuration and weight files for the model and load the network using them.
         modelConfiguration = b"/home/dieter/darknet/cfg/yolov3.cfg"
         modelWeights = b"/home/dieter/darknet/data/yolov3.weights"
@@ -52,14 +52,14 @@ class image_converter:
     def generateMsg(self, predictions, threshold, timeStamp):
         objects = []
         for prediction in predictions:
-            if prediction[1] > threshold:
+            if prediction[1] > threshold and prediction[0] == "car":
                 object = ObjectBoundingBox()
                 object.Class = prediction[0]
                 object.probability = prediction[1]
-                object.xmin = (prediction[2][0])
-                object.xmax = (prediction[2][1])
-                object.ymin = (prediction[2][2])
-                object.ymax = (prediction[2][3])
+                object.x = (prediction[2][0])
+                object.y = (prediction[2][1])
+                object.w = (prediction[2][2])
+                object.h = (prediction[2][3])
                 objects.append(object)
         objectMsg = CameraObjects()
         objectMsg.header = Header()
@@ -91,8 +91,8 @@ class image_converter:
         return im
 
 def main(args):
-    ic = image_converter()
-    rospy.init_node('image_converter', anonymous=True)
+    ic = object_detector()
+    rospy.init_node('object_detector', anonymous=True)
     try:
         rospy.spin()
     except KeyboardInterrupt:

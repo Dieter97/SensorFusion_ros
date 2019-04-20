@@ -88,7 +88,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
 int main(int argc, char **argv) {
     // Initialize ROS
-    ros::init(argc, argv, "lidar");
+    ros::init(argc, argv, "cloud_crop");
     ros::NodeHandle nh;
 
     /*std::cout << "Starting example Ros node! Threshold value: ";
