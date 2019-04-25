@@ -8,6 +8,8 @@ find_package(catkin REQUIRED COMPONENTS
 )
 find_package(PCL  REQUIRED )
 
+# Include message files
+include_directories(../../devel/include)
 
 catkin_package(
 )

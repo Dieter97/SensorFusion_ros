@@ -22,6 +22,8 @@
 #include "pcl_ros/point_cloud.h"
 #include <pcl/features/don.h>
 #include <pcl-1.9/pcl/filters/extract_indices.h>
+#include <sensor_fusion_msg/LidarClusters.h>
+
 // The GPU specific stuff here
 #include <pcl/gpu/octree/octree.hpp>
 #include <pcl/gpu/containers/device_array.hpp>
@@ -61,7 +63,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_ransac_filtered = new pcl::PointCloud<pcl::PointXYZ>;
     pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrRansacFiltered (xyz_cloud_ransac_filtered);
 
-    // perform ransac planar filtration to remove ground plane
+    // Perform ransac planar filtration to remove ground plane
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
     // Create the segmentation object
@@ -76,13 +78,14 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     seg1.segment (*inliers, *coefficients);
 
     int i = 0;
-    for(pcl::PointCloud<pcl::PointXYZ>::iterator it = xyz_cloud_filtered->begin(); it!= xyzCloudPtrFiltered->end(); it++){
+    for(auto it = xyz_cloud_filtered->begin(); it!= xyzCloudPtrFiltered->end(); it++){
         if(!(std::find(inliers->indices.begin(), inliers->indices.end(), i) != inliers->indices.end())){
             xyz_cloud_ransac_filtered->points.push_back(*it);
         }
         i++;
     }
 
+    // Perform cluster extraction on ground removed point cloud
     std::cout << "INFO: starting with the GPU version" << std::endl;
 
     clock_t tStart = clock();
@@ -103,14 +106,17 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     gec.setHostCloud(xyzCloudPtrRansacFiltered);
     gec.extract (cluster_indices_gpu);
 
-//  octree_device.clear();
+    //  octree_device.clear();
 
     printf("GPU Time taken: %.2fs\n", (double)(clock() - tStart)/CLOCKS_PER_SEC);
     std::cout << "INFO: stopped with the GPU version" << std::endl;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
     pcl::copyPointCloud(*xyzCloudPtrRansacFiltered,*rgb_cloud);
+
+    std::vector<sensor_msgs::PointCloud2> clusters;
     int j = 0;
+    // Process the clusters giving them a random color
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices_gpu.begin (); it != cluster_indices_gpu.end (); ++it) {
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster_gpu (new pcl::PointCloud<pcl::PointXYZRGB>);
         int r = randomColorValue();
@@ -137,10 +143,14 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         pcl_conversions::moveFromPCL(out, output);
         output.header.frame_id = cloud_msg->header.frame_id;
         output.header.stamp = cloud_msg->header.stamp;
-        // Publish the data
-        pub.publish(output);
+        clusters.emplace_back(output);
     }
 
+    // Create lidarClusters message
+    sensor_fusion_msg::LidarClusters clusterMsg;
+    clusterMsg.header = cloud_msg->header;
+    clusterMsg.clusters = clusters;
+    pub.publish(clusterMsg);
 }
 
 int main(int argc, char *argv[]) {
@@ -156,7 +166,7 @@ int main(int argc, char *argv[]) {
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/clusters", 10);
+    pub = nh.advertise<sensor_fusion_msg::LidarClusters>("/lidar/detection/out/clusters", 10);
 
     // Spin
     ros::spin();
