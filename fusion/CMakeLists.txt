@@ -15,12 +15,16 @@ find_package(PCL  REQUIRED )
 #For some reason msg have to be included like this
 include_directories(../../devel/include)
 
+include_directories(include)
+
 catkin_package(
 #  INCLUDE_DIRS include
 #  LIBRARIES fusion
 #  CATKIN_DEPENDS pcl_conversions pcl_ros roscpp rosmy sensor_msgs std_msgs
 #  DEPENDS system_lib
 )
+
+set(SOURCES src/fusion_objects/FusedObject.cpp src/fusion_objects/MappedPoint.cpp include/fusion/fusion_objects/FusedObject.h include/fusion/fusion_objects/MappedPoint.h)
 
 ###########
 ## Build ##
@@ -32,8 +36,8 @@ include_directories(
   ${PCL_INCLUDE_DIRS}
 )
 
-add_executable(lidar_camera_fusion src/lidar_camera_fusion.cpp)
-add_executable(lidar_object_fusion src/lidar_object_fusion.cpp)
+add_executable(lidar_camera_fusion src/lidar_camera_fusion.cpp ${SOURCES})
+add_executable(lidar_object_fusion src/lidar_object_fusion.cpp ${SOURCES})
 #add_dependencies(lidar_camera_fusion ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lidar_camera_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(lidar_object_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})

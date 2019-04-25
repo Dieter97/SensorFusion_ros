@@ -15,6 +15,8 @@
 #include <opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
+#include <fusion/fusion_objects/FusedObject.h>
+
 //PCL
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -24,126 +26,6 @@
 using namespace sensor_msgs;
 using namespace message_filters;
 using namespace sensor_fusion_msg;
-
-class MappedPoint {
-private:
-    pcl::PointXYZ point;
-    float cameraPlane;
-    int screenWidth;
-    int screenHeight;
-    int scale;
-    float pictureX;
-    float pictureY;
-    float distance;
-
-public:
-    MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane) {
-        this->point = point;
-        this->screenWidth = width;
-        this->screenHeight = height;
-        this->scale = scale;
-        this->cameraPlane = cameraPlane;
-        this->distance = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
-        this->mapPoint();
-    }
-
-    /*~MappedPoint() {
-        delete(&this->point);
-    }*/
-
-    float mapPoint() {
-        float *p;
-        p = perspectiveMapping(point.x, point.y, point.z, cameraPlane);
-        this->pictureX = ((*(p + 1) * scale) + this->screenWidth / 2);
-        this->pictureY = ((*(p + 2) * scale) + this->screenHeight / 2);
-    }
-
-    float *perspectiveMapping(float x1, float y1, float z1, float cameraPlane) {
-        float k = (cameraPlane - x1) / x1;
-        static float result[3];
-        result[0] = x1 + (k * x1);
-        result[1] = y1 + (k * y1);
-        result[2] = z1 + (k * z1);
-        return result;
-    }
-
-    float getDistance() {
-        return this->distance;
-    }
-
-    float map(float value, float low1, float high1, float low2, float high2) {
-        return (value - low1) * (high2 - low2) / (high1 - low1) + low2;
-    }
-
-    float getPictureX() const {
-        return pictureX;
-    }
-
-    void setPictureX(float pictureX) {
-        MappedPoint::pictureX = pictureX;
-    }
-
-    float getPictureY() const {
-        return pictureY;
-    }
-
-    void setPictureY(float pictureY) {
-        MappedPoint::pictureY = pictureY;
-    }
-};
-
-class FusedObject{
-public:
-    ObjectBoundingBox* cameraData;
-    std::vector<MappedPoint> *lidarPoints;
-    int r,g,b;
-
-public:
-
-    FusedObject(ObjectBoundingBox *cameraData) {
-        this->cameraData = cameraData;
-        this->lidarPoints = new std::vector<MappedPoint>;
-        this->setRandomColor();
-    }
-
-    FusedObject(ObjectBoundingBox *cameraData, std::vector<MappedPoint> *points) {
-        this->cameraData = cameraData;
-        this->lidarPoints = points;
-    }
-
-    void setColor(int r, int g, int b) {
-        this->r = r;
-        this->g = g;
-        this->b = b;
-    }
-
-    void setRandomColor(){
-        this->r = std::rand() % 255;;
-        this->g = std::rand() % 255;;
-        this->b = std::rand() % 255;;
-    }
-
-    void addPoint(const MappedPoint& point) {
-        this->lidarPoints->emplace_back(point);
-    }
-
-    void drawObject(const cv_bridge::CvImagePtr &imagePtr) {
-        //Draw the bounding box first
-        cv::Point pt1((int)(cameraData->x-cameraData->w/2), (int)(cameraData->y-cameraData->h/2));
-        cv::Point pt2((int)(cameraData->x+cameraData->w/2), (int)(cameraData->y+cameraData->h/2));
-        cv::rectangle(imagePtr->image, pt1, pt2, cv::Scalar(b,g,r));
-
-        //Draw the lidar points
-        for (auto it = lidarPoints->begin(); it != lidarPoints->end(); it++) {
-            int thickness = 6 - (int) it->map(it->getDistance(), 0, 100, 1, 5);
-            cv::circle(imagePtr->image, cv::Point((int) it->getPictureX(), (int) it->getPictureY()),
-                       thickness,
-                       cv::Scalar(b,g,r), cv::FILLED, cv::LINE_8);
-        }
-    }
-
-};
-
 
 // Main program variables
 
