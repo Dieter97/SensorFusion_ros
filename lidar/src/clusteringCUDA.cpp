@@ -129,7 +129,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
             cloud_cluster_gpu->points.push_back(rgb_cloud->points[*pit]);
         }
 
-        cloud_cluster_gpu->width = cloud_cluster_gpu->points.size ();
+        cloud_cluster_gpu->width = cloud_cluster_gpu->points.size();
         cloud_cluster_gpu->height = 1;
         cloud_cluster_gpu->is_dense = true;
 

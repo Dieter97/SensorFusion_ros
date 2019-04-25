@@ -21,6 +21,8 @@ public:
     int r,g,b;
 
 public:
+    FusedObject();
+
     FusedObject(ObjectBoundingBox *cameraData);
 
     FusedObject(ObjectBoundingBox *cameraData, std::vector<MappedPoint> *points);

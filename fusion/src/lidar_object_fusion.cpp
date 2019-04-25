@@ -113,7 +113,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, 
         */
     }
 
-    // Convert cameraObjects into fused objects
+    // Draw objects
     for(const auto &fusedObject: *fusedObjects) {
         fusedObject->drawObject(cv_ptr);
     }
@@ -129,7 +129,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 10);
-    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/clusters", 10);
+    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 10);
     message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2, CameraObjects> MySyncPolicy;
 

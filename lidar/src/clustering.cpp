@@ -12,6 +12,8 @@
 #include <pcl-1.9/pcl/filters/extract_indices.h>
 #include <pcl-1.9/pcl/kdtree/kdtree.h>
 #include <pcl-1.9/pcl/segmentation/extract_clusters.h>
+#include <sensor_fusion_msg/LidarClusters.h>
+
 
 ros::Publisher pub;
 int segTresh = 0;
@@ -80,13 +82,14 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     // specify euclidean cluster parameters
     ec.setClusterTolerance (segTresh); //
     ec.setMinClusterSize (10);
-    ec.setMaxClusterSize (25000);
+    ec.setMaxClusterSize (40);
     ec.setSearchMethod (tree);
     ec.setInputCloud (xyzCloudPtrRansacFiltered);
-    // exctract the indices pertaining to each cluster and store in a vector of pcl::PointIndices
+    // extract the indices pertaining to each cluster and store in a vector of pcl::PointIndices
     ec.extract (cluster_indices);
 
     int j = 0;
+    std::vector<sensor_msgs::PointCloud2> clusters;
     for (std::vector<pcl::PointIndices>::const_iterator it = cluster_indices.begin();
          it != cluster_indices.end(); ++it) {
         pcl::PointCloud<pcl::PointXYZRGB>::Ptr cloud_cluster_gpu(new pcl::PointCloud<pcl::PointXYZRGB>);
@@ -117,10 +120,15 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         pcl_conversions::moveFromPCL(out, output);
         output.header.frame_id = cloud_msg->header.frame_id;
         // Publish the data
-        pub.publish(output);
+        clusters.emplace_back(output);
 
     }
 
+    // Create lidarClusters message
+    sensor_fusion_msg::LidarClusters clusterMsg;
+    clusterMsg.header = cloud_msg->header;
+    clusterMsg.clusters = clusters;
+    pub.publish(clusterMsg);
 
 
     //pcl::fromPCLPointCloud2(*cloud, *test);
@@ -193,7 +201,7 @@ int main(int argc, char **argv) {
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2>("output", 1);
+    pub = nh.advertise<sensor_fusion_msg::LidarClusters>("/lidar/detection/out/clusters", 1);
 
     // Spin
     ros::spin();

@@ -38,8 +38,11 @@ include_directories(
 
 add_executable(lidar_camera_fusion src/lidar_camera_fusion.cpp ${SOURCES})
 add_executable(lidar_object_fusion src/lidar_object_fusion.cpp ${SOURCES})
+add_executable(cluster_camera_fusion src/cluster_camera_fusion.cpp ${SOURCES})
 #add_dependencies(lidar_camera_fusion ${catkin_EXPORTED_TARGETS})
 target_link_libraries(lidar_camera_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(lidar_object_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
+target_link_libraries(cluster_camera_fusion ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 add_dependencies(lidar_camera_fusion sensor_fusion_msg_generate_messages_cpp)
 add_dependencies(lidar_object_fusion sensor_fusion_msg_generate_messages_cpp)
+add_dependencies(cluster_camera_fusion sensor_fusion_msg_generate_messages_cpp)

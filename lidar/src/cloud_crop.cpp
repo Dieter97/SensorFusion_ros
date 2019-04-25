@@ -99,7 +99,7 @@ int main(int argc, char **argv) {
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
-    pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/clusters", 1);
+    pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/cropped", 1);
 
     // Spin
     ros::spin();
