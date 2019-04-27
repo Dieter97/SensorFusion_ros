@@ -37,7 +37,7 @@
 using namespace pcl;
 using namespace std;
 
-ros::Publisher pub;
+ros::Publisher pub,pub2;
 float segTresh = 0;
 
 
@@ -99,8 +99,8 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 
     std::vector<pcl::PointIndices> cluster_indices_gpu;
     pcl::gpu::EuclideanClusterExtraction gec;
-    gec.setClusterTolerance (2); // 2cm
-    gec.setMinClusterSize (10);
+    gec.setClusterTolerance (segTresh); // 2cm
+    gec.setMinClusterSize (2);
     gec.setMaxClusterSize (25000);
     gec.setSearchMethod (octree_device);
     gec.setHostCloud(xyzCloudPtrRansacFiltered);
@@ -144,6 +144,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         output.header.frame_id = cloud_msg->header.frame_id;
         output.header.stamp = cloud_msg->header.stamp;
         clusters.emplace_back(output);
+        pub2.publish(output);
     }
 
     // Create lidarClusters message
@@ -162,11 +163,12 @@ int main(int argc, char *argv[]) {
     std::cin >> segTresh;
 
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 10,
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/lidar/detection/out/cropped", 10,
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_fusion_msg::LidarClusters>("/lidar/detection/out/clusters", 10);
+    pub2 = nh.advertise<sensor_msgs::PointCloud2>("output", 10);
 
     // Spin
     ros::spin();

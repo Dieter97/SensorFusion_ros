@@ -3,6 +3,7 @@
 //
 
 #include <ros/ros.h>
+#include <chrono>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -11,8 +12,10 @@
 #include <sensor_fusion_msg/ObjectBoundingBox.h>
 #include <sensor_fusion_msg/CameraObjects.h>
 
-#include <opencv2/imgproc/imgproc.hpp>
-#include <opencv2/highgui/highgui.hpp>
+#include <fusion/fusion_objects/DarknetObject.h>
+
+#include <opencv4/opencv2/imgproc/imgproc.hpp>
+#include <opencv4/opencv2/highgui/highgui.hpp>
 #include <cv_bridge/cv_bridge.h>
 
 #include <fusion/fusion_objects/FusedObject.h>
@@ -30,6 +33,7 @@ using namespace sensor_fusion_msg;
 // Main program variables
 
 ros::Publisher pub;
+DarknetObject * d;
 float max = -1;
 
 
@@ -52,7 +56,7 @@ float map(float value, float low1, float high1, float low2, float high2) {
  * @param cloud_msg
  * @param objects
  */
-void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, const CameraObjectsConstPtr &objects) {
+void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) {
     std::cout << "Cloud received" << std::endl;
 
     // First handle PointCloud Data
@@ -74,9 +78,16 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg, 
 
     auto * fusedObjects = new std::vector<FusedObject*>;
 
+    // Detect objects
+    cv::imwrite("/tmp/tmp.png", cv_ptr->image);
+    auto start = std::chrono::high_resolution_clock::now();
+    std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png",0.5f,0.5f,0.45f);
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
 
     // Convert cameraObjects into fused objects
-    for (const auto &bounding_box : objects->bounding_boxes) {
+    for (const auto &bounding_box : objects) {
         auto boundingBox = new ObjectBoundingBox();
         boundingBox->x = bounding_box.x;
         boundingBox->y = bounding_box.y;
@@ -130,14 +141,16 @@ int main(int argc, char **argv) {
 
     message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 10);
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 10);
-    message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
-    typedef sync_policies::ApproximateTime<Image, PointCloud2, CameraObjects> MySyncPolicy;
+    //message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
+    typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 
-    Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_sub, info_sub, object_sub);
-    sync.registerCallback(boost::bind(&callback, _1, _2, _3));
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_sub, info_sub);
+    sync.registerCallback(boost::bind(&callback, _1, _2));
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
+
+    d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg","/home/dieter/darknet/data/yolov3.weights",0,"/home/dieter/darknet/cfg/coco.data");
 
     ros::spin();
 
