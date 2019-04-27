@@ -23,7 +23,7 @@ public:
 public:
     FusedObject();
 
-    FusedObject(ObjectBoundingBox *cameraData);
+    explicit FusedObject(ObjectBoundingBox *cameraData);
 
     FusedObject(ObjectBoundingBox *cameraData, std::vector<MappedPoint> *points);
 
