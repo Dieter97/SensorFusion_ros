@@ -35,6 +35,13 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::PointCloud<pcl::PointXYZ>::Ptr tmp(test);
     pcl::PointCloud<pcl::PointXYZ>::Ptr filtered(new pcl::PointCloud<pcl::PointXYZ>);
 
+    // Create the filtering object: downsample the dataset using a leaf size of 1cm
+    pcl::VoxelGrid<pcl::PointXYZ> vg;
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud_downsample (new pcl::PointCloud<pcl::PointXYZ>);
+    vg.setInputCloud (test);
+    vg.setLeafSize (0.50f, 0.50f, 0.50f);
+    vg.filter (*cloud_downsample);
+    std::cout << "PointCloud after filtering has: " << cloud_downsample->points.size ()  << " data points." << std::endl;
 
     float minX = 0;
     float maxX = 376;
@@ -46,7 +53,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::CropBox<pcl::PointXYZ> boxFilter;
     boxFilter.setMin(Eigen::Vector4f(minX, minY, minZ, 1.0));
     boxFilter.setMax(Eigen::Vector4f(maxX, maxY, maxZ, 1.0));
-    boxFilter.setInputCloud(test);
+    boxFilter.setInputCloud(cloud_downsample);
     boxFilter.filter(*filtered);
 
     pcl::PointCloud<pcl::PointXYZ>::Ptr groundRemoved(new pcl::PointCloud<pcl::PointXYZ>);
@@ -94,9 +101,11 @@ int main(int argc, char **argv) {
     /*std::cout << "Starting example Ros node! Threshold value: ";
     std::cin >> segTresh;*/
 
-    // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1,
-                                                                 cloud_cb);
+    std::string input;
+    nh.getParam("input", input);
+
+    // Create a ROS subscriber for the input point cloud /carla/ego_vehicle/lidar/front/point_cloud
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("input", 1, cloud_cb);
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::PointCloud2>("/lidar/detection/out/cropped", 1);

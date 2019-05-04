@@ -77,7 +77,7 @@ int main(int argc, char **argv) {
     std::cout << "Projection plane: ";
     std::cin >> camera_plane;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 1);
+    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 1);
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 

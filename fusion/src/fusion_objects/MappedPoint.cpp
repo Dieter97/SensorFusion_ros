@@ -5,13 +5,14 @@
 #include "fusion/fusion_objects/MappedPoint.h"
 
 MappedPoint::MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane) {
-this->point = point;
-this->screenWidth = width;
-this->screenHeight = height;
-this->scale = scale;
-this->cameraPlane = cameraPlane;
-this->distance = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
-this->mapPoint();
+    this->copX = 0.054f; this->copY =  0; this->copZ = 0.0;
+    this->point = point;
+    this->screenWidth = width;
+    this->screenHeight = height;
+    this->scale = scale;
+    this->cameraPlane = cameraPlane;
+    this->distance = std::sqrt(point.x * point.x + point.y * point.y + point.z * point.z);
+    this->mapPoint();
 }
 
 /*~MappedPoint() {
@@ -26,11 +27,11 @@ float MappedPoint::mapPoint() {
 }
 
 float * MappedPoint::perspectiveMapping(float x1, float y1, float z1, float cameraPlane) {
-    float k = (cameraPlane - x1) / x1;
+    float k = (cameraPlane - x1) / (x1-this->copX);
     static float result[3];
-    result[0] = x1 + (k * x1);
-    result[1] = y1 + (k * y1);
-    result[2] = z1 + (k * z1);
+    result[0] = x1 + (k * (x1-this->copX));
+    result[1] = y1 + (k * (y1-this->copY));
+    result[2] = z1 + (k * (z1-this->copZ));
     return result;
 }
 

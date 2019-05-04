@@ -101,7 +101,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
     // Go through all pointcloud points to associate them with a bounding box
     for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
         // First map the point to image coordinates
-        auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.2); //Scale is predetermined at -3500
+        auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.27); //Scale is predetermined at -3500
 
         // Associate the points to a detected object
         for(const auto &fusedObject: *fusedObjects) {
@@ -139,8 +139,8 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 10);
-    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 10);
+    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 10); ///carla/ego_vehicle/camera/rgb/front/image_color
+    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 10); ///lidar/detection/out/cropped
     //message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 

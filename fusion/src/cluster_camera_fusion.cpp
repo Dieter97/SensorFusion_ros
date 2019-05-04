@@ -141,7 +141,7 @@ int main(int argc, char **argv) {
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
 
-    d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg","/home/dieter/darknet/data/yolov2-tiny.weights",0,"/home/dieter/darknet/cfg/coco.data");
+    d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg","/home/dieter/darknet/data/yolov3.weights",0,"/home/dieter/darknet/cfg/coco.data");
 
     ros::spin();
 

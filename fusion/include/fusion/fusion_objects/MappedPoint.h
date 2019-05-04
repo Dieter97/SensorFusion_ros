@@ -21,6 +21,7 @@ private:
     float pictureX;
     float pictureY;
     float distance;
+    float copX,copY,copZ;
 
 public:
     MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane);
