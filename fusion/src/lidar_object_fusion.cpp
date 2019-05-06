@@ -19,12 +19,15 @@
 #include <cv_bridge/cv_bridge.h>
 
 #include <fusion/fusion_objects/FusedObject.h>
+#include <visualization_msgs/Marker.h>
 
 //PCL
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
 #include <pcl/point_types.h>
 #include <pcl/filters/crop_box.h>
+#include <pcl/common/transforms.h>
+#include <pcl/common/common.h>
 
 using namespace sensor_msgs;
 using namespace message_filters;
@@ -32,10 +35,9 @@ using namespace sensor_fusion_msg;
 
 // Main program variables
 
-ros::Publisher pub;
+ros::Publisher pub, marker_pub;
 DarknetObject * d;
 float max = -1;
-
 
 /**
  * Map function
@@ -126,6 +128,58 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
 
     // Draw objects
     for(const auto &fusedObject: *fusedObjects) {
+        // Construct pointcloud from fused object points
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+        for(auto &point : *fusedObject->lidarPoints) {
+            pcl::PointXYZ p = point.getPCLPoint();
+            cloud->push_back(p);
+        }
+
+        // Compute principal directions
+        Eigen::Vector4f pcaCentroid;
+        pcl::compute3DCentroid(*cloud, pcaCentroid);
+        Eigen::Matrix3f covariance;
+        computeCovarianceMatrixNormalized(*cloud, pcaCentroid, covariance);
+        Eigen::SelfAdjointEigenSolver<Eigen::Matrix3f> eigen_solver(covariance, Eigen::ComputeEigenvectors);
+        Eigen::Matrix3f eigenVectorsPCA = eigen_solver.eigenvectors();
+        eigenVectorsPCA.col(2) = eigenVectorsPCA.col(0).cross(eigenVectorsPCA.col(1));
+
+        // Transform the original cloud to the origin where the principal components correspond to the axes.
+        Eigen::Matrix4f projectionTransform(Eigen::Matrix4f::Identity());
+        projectionTransform.block<3,3>(0,0) = eigenVectorsPCA.transpose();
+        projectionTransform.block<3,1>(0,3) = -1.f * (projectionTransform.block<3,3>(0,0) * pcaCentroid.head<3>());
+        pcl::PointCloud<pcl::PointXYZ>::Ptr cloudPointsProjected (new pcl::PointCloud<pcl::PointXYZ>);
+        pcl::transformPointCloud(*cloud, *cloudPointsProjected, projectionTransform);
+        // Get the minimum and maximum points of the transformed cloud.
+        pcl::PointXYZ minPoint, maxPoint;
+        pcl::getMinMax3D(*cloudPointsProjected, minPoint, maxPoint);
+        const Eigen::Vector3f meanDiagonal = 0.5f*(maxPoint.getVector3fMap() + minPoint.getVector3fMap());
+
+        // Final transform
+        const Eigen::Quaternionf bboxQuaternion(eigenVectorsPCA); //Quaternions are a way to do rotations https://www.youtube.com/watch?v=mHVwd8gYLnI
+        const Eigen::Vector3f bboxTransform = eigenVectorsPCA * meanDiagonal + pcaCentroid.head<3>();
+
+        visualization_msgs::Marker marker;
+        marker.header.frame_id = "base_link";
+        marker.header.stamp = ros::Time();
+        marker.type = visualization_msgs::Marker::CUBE;
+        marker.action = visualization_msgs::Marker::ADD;
+        marker.pose.position.x = bboxTransform[0];
+        marker.pose.position.y = bboxTransform[1];
+        marker.pose.position.z = bboxTransform[2];
+        marker.pose.orientation.x = bboxQuaternion.x();
+        marker.pose.orientation.y = bboxQuaternion.y();
+        marker.pose.orientation.z = bboxQuaternion.z();
+        marker.pose.orientation.w = bboxQuaternion.w();
+        marker.scale.x = maxPoint.x-minPoint.x;
+        marker.scale.y = maxPoint.y-minPoint.y;
+        marker.scale.z = maxPoint.z-minPoint.z;
+        marker.color.a = 1.0; // Don't forget to set the alpha!
+        marker.color.r = 0.0;
+        marker.color.g = 1.0;
+        marker.color.b = 0.0;
+        marker_pub.publish(marker);
+
         fusedObject->drawObject(cv_ptr);
     }
 
@@ -149,6 +203,9 @@ int main(int argc, char **argv) {
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
+
+    //End point to publish markers
+    marker_pub = nh.advertise<visualization_msgs::Marker>("/fusion/bounding/out", 0);
 
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg","/home/dieter/darknet/data/yolov3.weights",0,"/home/dieter/darknet/cfg/coco.data");
 

@@ -184,7 +184,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1,
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/kitti/velo/pointcloud", 1,
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud

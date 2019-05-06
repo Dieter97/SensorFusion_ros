@@ -2,6 +2,8 @@
 // Created by dieter on 25.04.19.
 //
 
+#include <fusion/fusion_objects/MappedPoint.h>
+
 #include "fusion/fusion_objects/MappedPoint.h"
 
 MappedPoint::MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane) {
@@ -57,4 +59,8 @@ float MappedPoint::getPictureY() const {
 
 void MappedPoint::setPictureY(float pictureY) {
     MappedPoint::pictureY = pictureY;
+}
+
+pcl::PointXYZ MappedPoint::getPCLPoint() {
+    return this->point;
 }

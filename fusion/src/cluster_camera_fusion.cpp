@@ -58,7 +58,7 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         object->cameraData = new ObjectBoundingBox();
         int minX=image->width,maxX=0,minY=image->height,maxY=0;
         for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
-            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.2); //Scale is predetermined at -3500
+            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.27); //Scale is predetermined at -3500
             object->addPoint(*mappedPoint);
 
             // Propose a 2D bouding box for the cluster
@@ -131,7 +131,7 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/carla/ego_vehicle/camera/rgb/front/image_color", 10);
+    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 10);
     message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", 10);
     typedef sync_policies::ApproximateTime<Image, sensor_fusion_msg::LidarClusters> MySyncPolicy;
 

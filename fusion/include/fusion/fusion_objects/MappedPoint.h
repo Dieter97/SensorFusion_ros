@@ -46,6 +46,8 @@ public:
 
     void setPictureY(float pictureY);
 
+    pcl::PointXYZ getPCLPoint();
+
 };
 
 

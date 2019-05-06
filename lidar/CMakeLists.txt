@@ -21,13 +21,13 @@ include_directories(
 )
 
 add_executable(clustering src/clustering.cpp)
-#add_executable(segmentation src/segmentation.cpp)
+add_executable(segmentation src/segmentation.cpp)
 add_executable(clusteringCUDA src/clusteringCUDA.cpp)
 add_executable(cloud_crop src/cloud_crop.cpp)
-#add_executable(donSegmentationCUDA src/donSegmentationCUDA.cpp)
+add_executable(donSegmentationCUDA src/donSegmentationCUDA.cpp)
 target_link_libraries(clustering ${catkin_LIBRARIES} ${PCL_LIBRARIES})
-#target_link_libraries(segmentation ${catkin_LIBRARIES})
+target_link_libraries(segmentation ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(clusteringCUDA ${catkin_LIBRARIES} ${PCL_LIBRARIES})
 target_link_libraries(cloud_crop ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
-#target_link_libraries(donSegmentationCUDA ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
+target_link_libraries(donSegmentationCUDA ${catkin_LIBRARIES}  ${PCL_LIBRARIES})
 

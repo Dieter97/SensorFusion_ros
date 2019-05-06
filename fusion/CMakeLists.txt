@@ -9,6 +9,7 @@ find_package(catkin REQUIRED COMPONENTS
   cv_bridge
   sensor_msgs
   std_msgs
+  visualization_msgs
 )
 find_package(PCL  REQUIRED )
 find_package( OpenCV REQUIRED )

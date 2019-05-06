@@ -38,7 +38,7 @@ using namespace pcl;
 using namespace std;
 
 ros::Publisher pub,pub2;
-float segTresh = 2.5;
+float segTresh = 0.1;
 
 
 uint8_t randomColorValue() {
@@ -159,8 +159,8 @@ int main(int argc, char *argv[]) {
     ros::init(argc, argv, "lidar");
     ros::NodeHandle nh;
 
-    /*std::cout << "Starting example Ros node! Threshold value: ";
-    std::cin >> segTresh;*/
+    std::cout << "Starting clustering Ros node! Threshold value: ";
+    std::cin >> segTresh;
 
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/lidar/detection/out/cropped", 10,

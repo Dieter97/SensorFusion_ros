@@ -2,20 +2,20 @@
 #include <string>
 #include <sensor_msgs/PointCloud2.h>
 #include <pcl_conversions/pcl_conversions.h>
-#include <pcl/point_cloud.h>
-#include <pcl/point_types.h>
-#include <pcl/io/pcd_io.h>
-#include <pcl/kdtree/kdtree_flann.h>
-#include <pcl/common/point_operators.h>
-#include <pcl/common/io.h>
-#include <pcl/filters/conditional_removal.h>
-#include <pcl/segmentation/sac_segmentation.h>
-#include <pcl/segmentation/extract_clusters.h>
+#include <pcl-1.9/pcl/point_cloud.h>
+#include <pcl-1.9/pcl/point_types.h>
+#include <pcl-1.9/pcl/io/pcd_io.h>
+#include <pcl-1.9/pcl/kdtree/kdtree_flann.h>
+#include <pcl-1.9/pcl/common/point_operators.h>
+#include <pcl-1.9/pcl/common/io.h>
+#include <pcl-1.8/pcl/filters/conditional_removal.h>
+#include <pcl-1.9/pcl/segmentation/sac_segmentation.h>
+#include <pcl-1.9/pcl/segmentation/extract_clusters.h>
 
-#include <pcl/gpu/features/features.hpp>
-#include <pcl/gpu/octree/octree.hpp>
+#include <pcl-1.9/pcl/gpu/features/features.hpp>
+#include <pcl-1.9/pcl/gpu/octree/octree.hpp>
 
-#include <pcl/features/don.h>
+#include <pcl-1.9/pcl/features/don.h>
 
 using namespace pcl;
 using namespace std;
@@ -191,9 +191,6 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         pcl::toROSMsg(*doncloud, outblob);
         pub.publish(outblob);
     }
-
-
-
 }
 
 int main(int argc, char **argv) {
@@ -202,7 +199,7 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     // Create a ROS subscriber for the input point cloud
-    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/carla/ego_vehicle/lidar/front/point_cloud", 1,
+    ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/kitti/velo/pointcloud", 1,
                                                                  cloud_cb);
 
     // Create a ROS publisher for the output point cloud
