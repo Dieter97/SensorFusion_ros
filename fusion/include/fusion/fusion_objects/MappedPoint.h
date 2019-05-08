@@ -26,6 +26,9 @@ private:
 public:
     MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane);
 
+    //Copy constructor
+    MappedPoint(const MappedPoint &point);
+
     /*~MappedPoint() {
         delete(&this->point);
     }*/

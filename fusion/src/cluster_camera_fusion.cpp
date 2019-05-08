@@ -71,8 +71,8 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         // Update the object' bounding box and add an offset
         object->cameraData->x = minX + (int)((maxX-minX)/2);
         object->cameraData->y = minY + (int)((maxY-minY)/2);
-        object->cameraData->w = (int)((maxX-minX)) + (int) (object->lidarPoints->size() / 2);
-        object->cameraData->h = (int)((maxY-minY)) + (int) (object->lidarPoints->size() / 2);
+        object->cameraData->w = (int) ((maxX - minX)) + 15;
+        object->cameraData->h = (int) ((maxY - minY)) + 15;
         object->setRandomColor();
         clusters.emplace_back(object);
     }
@@ -96,19 +96,23 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         cv::Mat miniMat;
         if(rect.x > 0 && rect.x < image->width && rect.x+rect.width > 0 && rect.x+rect.width < image->width){
             if(rect.y > 0 && rect.y < image->height && rect.y+rect.height > 0 && rect.y+rect.height < image->height){
-                miniMat = cv_ptr->image(rect);
-                cv::imwrite("/tmp/tmp.png", miniMat);
-                auto start = std::chrono::high_resolution_clock::now();
-                std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png",0.5f,0.5f,0.45f);
-                auto finish = std::chrono::high_resolution_clock::now();
-                std::chrono::duration<double> elapsed = finish - start;
-                std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
-                if(!objects.empty()){
-                    std::cout << "Detected class" << objects[0].Class << std::endl;
-                    fusedObject->cameraData->Class = objects[0].Class;
-                    fusedObject->cameraData->probability = objects[0].probability;
-                    fusedObject->drawObject(cv_ptr);
+                if ((rect.width * rect.height) > 800) { //Require the boudning box to have a minimum area
+                    miniMat = cv_ptr->image(rect);
+                    cv::imwrite("/tmp/tmp.png", miniMat);
+                    auto start = std::chrono::high_resolution_clock::now();
+                    std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png", 0.5f,
+                                                                                                  0.5f, 0.45f);
+                    auto finish = std::chrono::high_resolution_clock::now();
+                    std::chrono::duration<double> elapsed = finish - start;
+                    std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
+                    if (!objects.empty()) {
+                        std::cout << "Detected class" << objects[0].Class << std::endl;
+                        fusedObject->cameraData->Class = objects[0].Class;
+                        fusedObject->cameraData->probability = objects[0].probability;
+                        fusedObject->drawObject(cv_ptr);
+                    }
                 }
+
             }
         }
 

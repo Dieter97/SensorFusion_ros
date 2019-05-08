@@ -64,3 +64,13 @@ void MappedPoint::setPictureY(float pictureY) {
 pcl::PointXYZ MappedPoint::getPCLPoint() {
     return this->point;
 }
+
+MappedPoint::MappedPoint(const MappedPoint &point) {
+    this->point = point.point;
+    this->distance = point.distance;
+    this->screenHeight = point.screenHeight;
+    this->screenWidth = point.screenWidth;
+    this->pictureX = point.pictureX;
+    this->pictureY = point.pictureY;
+    this->cameraPlane = point.cameraPlane;
+}

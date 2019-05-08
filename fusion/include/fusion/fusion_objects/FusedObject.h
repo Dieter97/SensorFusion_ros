@@ -7,10 +7,20 @@
 
 #include <sensor_fusion_msg/ObjectBoundingBox.h>
 #include <sensor_fusion_msg/CameraObjects.h>
+#include <visualization_msgs/Marker.h>
 #include <cv_bridge/cv_bridge.h>
 #include "MappedPoint.h"
 #include <cv_bridge/cv_bridge.h>
 
+#include <pcl/point_cloud.h>
+#include <pcl/point_types.h>
+#include <pcl/common/common.h>
+#include <pcl-1.9/pcl/filters/extract_indices.h>
+#include <pcl-1.9/pcl/kdtree/kdtree.h>
+#include <pcl-1.9/pcl/segmentation/extract_clusters.h>
+
+#include <time.h>
+#include <algorithm>
 
 using namespace sensor_fusion_msg;
 
@@ -35,6 +45,9 @@ public:
 
     void drawObject(const cv_bridge::CvImagePtr &imagePtr);
 
+    void filterBiggestCluster(float tolerance);
+
+    visualization_msgs::Marker calculateBoundingBox();
 };
 
 

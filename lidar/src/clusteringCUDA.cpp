@@ -63,6 +63,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::PointCloud<pcl::PointXYZ> *xyz_cloud_ransac_filtered = new pcl::PointCloud<pcl::PointXYZ>;
     pcl::PointCloud<pcl::PointXYZ>::Ptr xyzCloudPtrRansacFiltered (xyz_cloud_ransac_filtered);
 
+    /*
     // Perform ransac planar filtration to remove ground plane
     pcl::ModelCoefficients::Ptr coefficients (new pcl::ModelCoefficients);
     pcl::PointIndices::Ptr inliers (new pcl::PointIndices);
@@ -84,14 +85,14 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
         }
         i++;
     }
-
+    */
     // Perform cluster extraction on ground removed point cloud
     std::cout << "INFO: starting with the GPU version" << std::endl;
 
     clock_t tStart = clock();
 
     pcl::gpu::Octree::PointCloud cloud_device;
-    cloud_device.upload(xyzCloudPtrRansacFiltered->points);
+    cloud_device.upload(xyzCloudPtrFiltered->points);
 
     pcl::gpu::Octree::Ptr octree_device (new pcl::gpu::Octree);
     octree_device->setCloud(cloud_device);
@@ -101,9 +102,9 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::gpu::EuclideanClusterExtraction gec;
     gec.setClusterTolerance (segTresh); // 2cm
     gec.setMinClusterSize (2);
-    gec.setMaxClusterSize (25000);
+    gec.setMaxClusterSize(200);
     gec.setSearchMethod (octree_device);
-    gec.setHostCloud(xyzCloudPtrRansacFiltered);
+    gec.setHostCloud(xyzCloudPtrFiltered);
     gec.extract (cluster_indices_gpu);
 
     //  octree_device.clear();
@@ -112,7 +113,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     std::cout << "INFO: stopped with the GPU version" << std::endl;
 
     pcl::PointCloud<pcl::PointXYZRGB>::Ptr rgb_cloud (new pcl::PointCloud<pcl::PointXYZRGB>);
-    pcl::copyPointCloud(*xyzCloudPtrRansacFiltered,*rgb_cloud);
+    pcl::copyPointCloud(*xyzCloudPtrFiltered, *rgb_cloud);
 
     std::vector<sensor_msgs::PointCloud2> clusters;
     int j = 0;
