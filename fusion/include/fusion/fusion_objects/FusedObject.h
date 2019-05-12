@@ -21,6 +21,8 @@
 
 #include <time.h>
 #include <algorithm>
+#include <fstream>
+
 
 using namespace sensor_fusion_msg;
 
@@ -48,6 +50,8 @@ public:
     void filterBiggestCluster(float tolerance);
 
     visualization_msgs::Marker calculateBoundingBox();
+
+    void outputToLabelFile(char *fileLocation);
 };
 
 

@@ -46,6 +46,8 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
 
+add_definitions(${PCL_DEFINITIONS})
+
 add_executable(lidar_camera_fusion src/lidar_camera_fusion.cpp ${SOURCES})
 add_executable(lidar_object_fusion src/lidar_object_fusion.cpp ${SOURCES})
 add_executable(cluster_camera_fusion src/cluster_camera_fusion.cpp ${SOURCES})

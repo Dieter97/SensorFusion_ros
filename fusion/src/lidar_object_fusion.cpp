@@ -123,6 +123,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
     visualization_msgs::MarkerArray markers;
     for (const auto &fusedObject: *fusedObjects) {
         fusedObject->filterBiggestCluster(0.8);
+        fusedObject->outputToLabelFile("/home/dieter/Documents/testdata/test.txt");
         markers.markers.emplace_back(fusedObject->calculateBoundingBox());
         fusedObject->drawObject(cv_ptr);
     }
@@ -150,7 +151,7 @@ int main(int argc, char **argv) {
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
 
     //End point to publish markers
-    marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 0);
+    marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
 
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0,
                           "/home/dieter/darknet/cfg/coco.data");

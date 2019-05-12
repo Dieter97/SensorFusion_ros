@@ -111,6 +111,7 @@ void FusedObject::filterBiggestCluster(float tolerance) {
     std::cout << "Removed " << start - end << " points" << std::endl;
 }
 
+/*
 visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -140,8 +141,7 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     const Eigen::Vector3f meanDiagonal = 0.5f * (maxPoint.getVector3fMap() + minPoint.getVector3fMap());
 
     // Final transform
-    const Eigen::Quaternionf bboxQuaternion(
-            eigenVectorsPCA); //Quaternions are a way to do rotations https://www.youtube.com/watch?v=mHVwd8gYLnI
+    const Eigen::Quaternionf bboxQuaternion(eigenVectorsPCA); //Quaternions are a way to do rotations https://www.youtube.com/watch?v=mHVwd8gYLnI
     const Eigen::Vector3f bboxTransform = eigenVectorsPCA * meanDiagonal + pcaCentroid.head<3>();
 
     visualization_msgs::Marker marker;
@@ -165,4 +165,102 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     marker.color.b = 0.0;
 
     return marker;
+}
+*/
+visualization_msgs::Marker FusedObject::calculateBoundingBox() {
+    // Construct pointcloud from fused object points
+    pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
+    for (auto &point : *this->lidarPoints) {
+        pcl::PointXYZ p = point.getPCLPoint();
+        cloud->push_back(p);
+    }
+
+    Eigen::Vector4f centroid;
+    Eigen::Vector4f min;
+    Eigen::Vector4f max;
+
+    pcl::compute3DCentroid(*cloud, centroid);
+    pcl::getMinMax3D(*cloud, min, max);
+
+    uint32_t shape = visualization_msgs::Marker::CUBE;
+    visualization_msgs::Marker marker;
+    //marker.header.frame_id = cloud->header.frame_id;
+    marker.header.frame_id = "base_link";
+    marker.header.stamp = ros::Time::now();
+
+    //marker.ns = ns;
+    //marker.id = id;
+    marker.type = shape;
+    marker.action = visualization_msgs::Marker::ADD;
+
+    marker.pose.position.x = centroid[0];
+    marker.pose.position.y = centroid[1];
+    marker.pose.position.z = centroid[2];
+    marker.pose.orientation.x = 0.0;
+    marker.pose.orientation.y = 0.0;
+    marker.pose.orientation.z = 0.0;
+    marker.pose.orientation.w = 1.0;
+
+    marker.scale.x = (max[0] - min[0]);
+    marker.scale.y = (max[1] - min[1]);
+    marker.scale.z = (max[2] - min[2]);
+
+    if (marker.scale.x == 0)
+        marker.scale.x = 0.1;
+
+    if (marker.scale.y == 0)
+        marker.scale.y = 0.1;
+
+    if (marker.scale.z == 0)
+        marker.scale.z = 0.1;
+
+    marker.color.r = r;
+    marker.color.g = g;
+    marker.color.b = b;
+    marker.color.a = 0.5;
+
+    marker.lifetime = ros::Duration();
+//   marker.lifetime = ros::Duration(0.5);
+    return marker;
+}
+
+void FusedObject::outputToLabelFile(char *fileLocation) {
+    std::ofstream outfile;
+
+    outfile.open(fileLocation, std::ios_base::app);
+    if (outfile.fail())
+        throw std::ios_base::failure(std::strerror(errno));
+
+    // First the label
+    outfile << this->cameraData->Class << " ";
+
+    //Truncation
+    outfile << "-1 ";
+
+    //Occlusion
+    outfile << "-1 ";
+
+    //Alpha
+    outfile << "-10 ";
+
+    //2D boundingbox
+    outfile << (cameraData->x - cameraData->w / 2) << " "; //X1
+    outfile << (cameraData->y - cameraData->h / 2) << " "; //Y1
+    outfile << (cameraData->x + cameraData->w / 2) << " "; //X2
+    outfile << (cameraData->y + cameraData->h / 2) << " "; //Y2
+
+    //3D boundingbox
+    outfile << "-1 "; //H
+    outfile << "-1 "; //W
+    outfile << "-1 "; //L
+    outfile << "-1000 -1000 -1000 "; //t
+    outfile << "-10 "; //ry
+
+    //Score
+    outfile << this->cameraData->probability << " ";
+
+    //End line
+    outfile << std::endl;
+
+    outfile.close();
 }
