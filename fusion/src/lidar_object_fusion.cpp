@@ -4,6 +4,7 @@
 
 #include <ros/ros.h>
 #include <chrono>
+#include <cstdio>
 #include <message_filters/subscriber.h>
 #include <message_filters/synchronizer.h>
 #include <message_filters/sync_policies/approximate_time.h>
@@ -38,6 +39,7 @@ using namespace sensor_fusion_msg;
 
 ros::Publisher pub, marker_pub;
 DarknetObject *d;
+int frame_id;
 float max = -1;
 
 /**
@@ -119,17 +121,27 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
         }
     }
 
+    // Create output labels file
+    std::ofstream file;
+    char path[100];
+    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0002/data/%06d.txt", frame_id);
+    file.open(path);
+    file.close();
+
     // Draw objects & calculate a 3D bounding box for the object
     visualization_msgs::MarkerArray markers;
     for (const auto &fusedObject: *fusedObjects) {
         fusedObject->filterBiggestCluster(0.8);
-        fusedObject->outputToLabelFile("/home/dieter/Documents/testdata/test.txt");
+        fusedObject->outputToLabelFile(path);
         markers.markers.emplace_back(fusedObject->calculateBoundingBox());
         fusedObject->drawObject(cv_ptr);
     }
 
+    // Publish output
     marker_pub.publish(markers);
     pub.publish(cv_ptr->toImageMsg());
+
+    frame_id++;
 }
 
 int main(int argc, char **argv) {
@@ -138,13 +150,13 @@ int main(int argc, char **argv) {
     ros::NodeHandle nh;
 
     message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw",
-                                                 10); ///carla/ego_vehicle/camera/rgb/front/image_color
+                                                 400); ///carla/ego_vehicle/camera/rgb/front/image_color
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped",
-                                                      10); ///lidar/detection/out/cropped
+                                                      400); ///lidar/detection/out/cropped
     //message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 
-    Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_sub, info_sub);
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(400), image_sub, info_sub);
     sync.registerCallback(boost::bind(&callback, _1, _2));
 
     // Create a ROS publisher for the output point cloud
@@ -155,6 +167,7 @@ int main(int argc, char **argv) {
 
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0,
                           "/home/dieter/darknet/cfg/coco.data");
+    frame_id = 0;
 
     ros::spin();
 

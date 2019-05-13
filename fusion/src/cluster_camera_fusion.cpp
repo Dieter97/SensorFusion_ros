@@ -18,6 +18,9 @@
 #include <fusion/fusion_objects/FusedObject.h>
 #include <fusion/fusion_objects/DarknetObject.h>
 
+#include <visualization_msgs/Marker.h>
+#include <visualization_msgs/MarkerArray.h>
+
 //PCL
 #include <pcl_conversions/pcl_conversions.h>
 #include <pcl/point_cloud.h>
@@ -30,10 +33,10 @@ using namespace message_filters;
 using namespace sensor_fusion_msg;
 
 // Main program variables
-ros::Publisher pub;
+ros::Publisher pub, marker_pub;
 DarknetObject * d;
 float max = -1;
-
+int frame_id;
 /**
  * Callback function, time synchronized callback function to process the data
  * @param image
@@ -87,8 +90,15 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         return;
     }
 
-    // Loop through all clusters, perform object detection and draw
+    // Create output labels file
+    std::ofstream file;
+    char path[100];
+    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt", frame_id);
+    file.open(path);
+    file.close();
 
+    // Loop through all clusters, perform object detection and draw
+    visualization_msgs::MarkerArray markers;
     for(const auto &fusedObject: clusters) {
         cv::Point pt1((int)(fusedObject->cameraData->x-fusedObject->cameraData->w/2), (int)(fusedObject->cameraData->y-fusedObject->cameraData->h/2));
         cv::Point pt2((int)(fusedObject->cameraData->x+fusedObject->cameraData->w/2), (int)(fusedObject->cameraData->y+fusedObject->cameraData->h/2));
@@ -109,6 +119,8 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         std::cout << "Detected class" << objects[0].Class << std::endl;
                         fusedObject->cameraData->Class = objects[0].Class;
                         fusedObject->cameraData->probability = objects[0].probability;
+                        markers.markers.emplace_back(fusedObject->calculateBoundingBox());
+                        fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
                     }
                 }
@@ -125,9 +137,10 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
     std::chrono::duration<double> elapsed = finish - start;
     std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
 */
-
+    marker_pub.publish(markers);
     pub.publish(cv_ptr->toImageMsg());
 
+    frame_id++;
 }
 
 int main(int argc, char **argv) {
@@ -135,18 +148,22 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 10);
-    message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", 10);
+    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 400);
+    message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", 400);
     typedef sync_policies::ApproximateTime<Image, sensor_fusion_msg::LidarClusters> MySyncPolicy;
 
-    Synchronizer<MySyncPolicy> sync(MySyncPolicy(10), image_sub, info_sub);
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(400), image_sub, info_sub);
     sync.registerCallback(boost::bind(&callback, _1, _2));
 
     // Create a ROS publisher for the output point cloud
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
 
+    //End point to publish markers
+    marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
+
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg", "/home/dieter/darknet/data/yolov2-tiny.weights",
                           0, "/home/dieter/darknet/cfg/coco.data");
+    frame_id = 0;
 
     ros::spin();
 

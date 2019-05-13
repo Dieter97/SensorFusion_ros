@@ -227,12 +227,16 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
 void FusedObject::outputToLabelFile(char *fileLocation) {
     std::ofstream outfile;
 
+    if (this->cameraData->Class != "car") {
+        return;
+    }
+
     outfile.open(fileLocation, std::ios_base::app);
     if (outfile.fail())
         throw std::ios_base::failure(std::strerror(errno));
 
     // First the label
-    outfile << this->cameraData->Class << " ";
+    outfile << "Car ";
 
     //Truncation
     outfile << "-1 ";
@@ -244,10 +248,10 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     outfile << "-10 ";
 
     //2D boundingbox
-    outfile << (cameraData->x - cameraData->w / 2) << " "; //X1
-    outfile << (cameraData->y - cameraData->h / 2) << " "; //Y1
-    outfile << (cameraData->x + cameraData->w / 2) << " "; //X2
-    outfile << (cameraData->y + cameraData->h / 2) << " "; //Y2
+    outfile << std::defaultfloat << (cameraData->x - cameraData->w / 2) << " "; //X1
+    outfile << std::defaultfloat << (cameraData->y - cameraData->h / 2) << " "; //Y1
+    outfile << std::defaultfloat << (cameraData->x + cameraData->w / 2) << " "; //X2
+    outfile << std::defaultfloat << (cameraData->y + cameraData->h / 2) << " "; //Y2
 
     //3D boundingbox
     outfile << "-1 "; //H
@@ -257,7 +261,7 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     outfile << "-10 "; //ry
 
     //Score
-    outfile << this->cameraData->probability << " ";
+    outfile << std::defaultfloat << this->cameraData->probability << " ";
 
     //End line
     outfile << std::endl;
