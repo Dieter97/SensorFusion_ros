@@ -63,19 +63,22 @@ if __name__ == "__main__":
     # Result var
     N_total_ground = 0
     N_total_detected = 0
+    N_total_false_positives = 0  # Detected but not in ground truth
+    N_total_false_negatives = 0  # In ground truth but not detected
 
     for i in range(0, N_FRAMES):
         res = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt" % (i))
         ground = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2/%06d.txt" % (i))
 
         N_detection = len(res.labels)
-        N_groundThruth = len(ground.labels)
+        N_groundTruth = len(ground.labels)
 
-        N_total_ground = N_total_ground + N_groundThruth
+        N_total_ground = N_total_ground + N_groundTruth
 
         # No labels in res file skip
         if (len(res.labels) == 0): continue
 
+        N_correct_detected = 0
         # For each ground truth car find the most overlapping detected object
         for label in ground.labels:
             object = res.findBestObject(label)
@@ -85,7 +88,7 @@ if __name__ == "__main__":
 
             if ratio > 0.5:
                 # More than 50% overlap => correct detection
-                N_total_detected = N_total_detected + 1
+                N_correct_detected = N_correct_detected + 1
                 print(label)
                 print(object)
                 print(ratio)
@@ -98,6 +101,14 @@ if __name__ == "__main__":
                     plt.ylim(1500)
                     plt.xlim(1500)
                     plt.show(fig1)
+        # Update vars
+        N_total_detected = N_total_detected + N_correct_detected
+        N_total_false_negatives = N_total_false_negatives + max(0, (N_groundTruth - N_correct_detected))
+        N_total_false_positives = N_total_false_positives + max(0, (N_detection - N_correct_detected))
 
-    result = float((float(N_total_detected) / float(N_total_ground))) * 100
-    print("Correctly detected ratio: %.2f%%" % (result))
+    correct_ratio = float((float(N_total_detected) / float(N_total_ground))) * 100
+    precision = float(float(N_total_detected) / (float(N_total_detected) + float(N_total_false_positives))) * 100
+    recall = float(float(N_total_detected) / (float(N_total_detected) + float(N_total_false_negatives))) * 100
+    print("Correctly detected ratio: %.2f%%" % (correct_ratio))
+    print("Precision: %.2f%% (When it detects a car is is %.2f%% correct)" % (precision, precision))
+    print("Recall: %.2f%% (Detects %.2f%% of all cars) " % (recall, recall))
