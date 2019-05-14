@@ -185,7 +185,7 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     uint32_t shape = visualization_msgs::Marker::CUBE;
     visualization_msgs::Marker marker;
     //marker.header.frame_id = cloud->header.frame_id;
-    marker.header.frame_id = "base_link";
+    marker.header.frame_id = "velo_link";
     marker.header.stamp = ros::Time::now();
 
     //marker.ns = ns;

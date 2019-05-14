@@ -91,11 +91,11 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
     }
 
     // Create output labels file
-    std::ofstream file;
-    char path[100];
-    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt", frame_id);
-    file.open(path);
-    file.close();
+    //std::ofstream file;
+    //char path[100];
+    //sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt", frame_id);
+    //file.open(path);
+    //file.close();
 
     // Loop through all clusters, perform object detection and draw
     visualization_msgs::MarkerArray markers;
@@ -120,7 +120,7 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         fusedObject->cameraData->Class = objects[0].Class;
                         fusedObject->cameraData->probability = objects[0].probability;
                         markers.markers.emplace_back(fusedObject->calculateBoundingBox());
-                        fusedObject->outputToLabelFile(path);
+                        //fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
                     }
                 }

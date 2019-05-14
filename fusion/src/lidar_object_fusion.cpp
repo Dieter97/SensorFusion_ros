@@ -124,7 +124,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
     // Create output labels file
     std::ofstream file;
     char path[100];
-    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0002/data/%06d.txt", frame_id);
+    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0022/data/%06d.txt", frame_id);
     file.open(path);
     file.close();
 
