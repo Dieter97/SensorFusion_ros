@@ -49,23 +49,23 @@ class Label:
     def area(self):
         return (max(self.x2, self.x1) - min(self.x1, self.x2)) * (max(self.y1, self.y2) - min(self.y2, self.y1))
 
-    def draw(self, currentAxis):
+    def draw(self, currentAxis, color=(1, 0, 0, 1)):
         currentAxis.add_patch(
             Rectangle((min(self.x1, self.x2), min(self.y1, self.x2)), (max(self.x2, self.x1) - min(self.x1, self.x2)),
-                      (max(self.y1, self.y2) - min(self.y2, self.y1)), alpha=1, fill=False))
+                      (max(self.y1, self.y2) - min(self.y2, self.y1)), alpha=1, fill=False, color=color))
 
 
 if __name__ == "__main__":
     DEBUG = False
 
-    N_FRAMES = 650
+    N_FRAMES = 320
 
     # Result var
     N_total_ground = 0
     N_total_detected = 0
 
     for i in range(0, N_FRAMES):
-        res = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/results/0022/data/%06d.txt" % (i))
+        res = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt" % (i))
         ground = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2/%06d.txt" % (i))
 
         N_detection = len(res.labels)
@@ -90,10 +90,10 @@ if __name__ == "__main__":
                 print(object)
                 print(ratio)
                 print("\n")
-                if (DEBUG):
+                if (DEBUG == True):
                     fig1 = plt.figure()
                     ax1 = fig1.add_subplot(111, aspect='equal')
-                    object.draw(ax1)
+                    object.draw(ax1, color=(0, 0.5, 0, 1))
                     label.draw(ax1)
                     plt.ylim(1500)
                     plt.xlim(1500)
