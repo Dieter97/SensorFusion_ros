@@ -1,4 +1,5 @@
 import matplotlib.pyplot as plt
+import argparse
 from matplotlib.patches import Rectangle
 
 
@@ -56,9 +57,14 @@ class Label:
 
 
 if __name__ == "__main__":
+    parser = argparse.ArgumentParser()
+    parser.add_argument("result", help="Result folder containing detected label files")
+    parser.add_argument("ground", help="Groud truth folder containing ground truth label files")
+    args = parser.parse_args()
+
     DEBUG = False
 
-    N_FRAMES = 320
+    N_FRAMES = 400
 
     # Result var
     N_total_ground = 0
@@ -67,8 +73,9 @@ if __name__ == "__main__":
     N_total_false_negatives = 0  # In ground truth but not detected
 
     for i in range(0, N_FRAMES):
-        res = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt" % (i))
-        ground = Frame("/home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2/%06d.txt" % (i))
+        res = Frame("%s/%06d.txt" % (args.result, i))  # /home/dieter/Documents/Kitti/benchmark/cpp/results/0029/data
+        ground = Frame(
+            "%s/%06d.txt" % (args.ground, i))  # /home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2
 
         N_detection = len(res.labels)
         N_groundTruth = len(ground.labels)
@@ -106,6 +113,7 @@ if __name__ == "__main__":
         N_total_false_negatives = N_total_false_negatives + max(0, (N_groundTruth - N_correct_detected))
         N_total_false_positives = N_total_false_positives + max(0, (N_detection - N_correct_detected))
 
+    # Output results
     correct_ratio = float((float(N_total_detected) / float(N_total_ground))) * 100
     precision = float(float(N_total_detected) / (float(N_total_detected) + float(N_total_false_positives))) * 100
     recall = float(float(N_total_detected) / (float(N_total_detected) + float(N_total_false_negatives))) * 100

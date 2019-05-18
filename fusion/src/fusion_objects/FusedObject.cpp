@@ -182,7 +182,7 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     pcl::compute3DCentroid(*cloud, centroid);
     pcl::getMinMax3D(*cloud, min, max);
 
-    uint32_t shape = visualization_msgs::Marker::CUBE;
+    uint32_t shape = visualization_msgs::Marker::POINTS;
     visualization_msgs::Marker marker;
     //marker.header.frame_id = cloud->header.frame_id;
     marker.header.frame_id = "velo_link";
@@ -214,9 +214,9 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     if (marker.scale.z == 0)
         marker.scale.z = 0.1;
 
-    marker.color.r = r;
-    marker.color.g = g;
-    marker.color.b = b;
+    marker.color.r = 1;
+    marker.color.g = 1;
+    marker.color.b = 1;
     marker.color.a = 0.5;
 
     marker.lifetime = ros::Duration();
