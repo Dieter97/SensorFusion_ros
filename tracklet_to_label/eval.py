@@ -1,3 +1,5 @@
+from math import sqrt
+
 import matplotlib.pyplot as plt
 import argparse
 from matplotlib.patches import Rectangle
@@ -35,6 +37,9 @@ class Label:
         self.y1 = float(props[5])
         self.x2 = float(props[6])
         self.y2 = float(props[7])
+        self.tx = float(props[11])
+        self.ty = float(props[12])
+        self.tz = float(props[13])
 
     def __str__(self):
         return "Class %s\nBBox: (%.2f,%.2f),(%.2f,%.2f)" % (self.Class, self.x1, self.y1, self.x2, self.y2)
@@ -50,10 +55,21 @@ class Label:
     def area(self):
         return (max(self.x2, self.x1) - min(self.x1, self.x2)) * (max(self.y1, self.y2) - min(self.y2, self.y1))
 
+    def distance(self):
+        return sqrt((self.tx * self.tx) + (self.ty * self.ty) + (self.tz * self.tz))
+
     def draw(self, currentAxis, color=(1, 0, 0, 1)):
         currentAxis.add_patch(
             Rectangle((min(self.x1, self.x2), min(self.y1, self.x2)), (max(self.x2, self.x1) - min(self.x1, self.x2)),
                       (max(self.y1, self.y2) - min(self.y2, self.y1)), alpha=1, fill=False, color=color))
+
+def str2bool(v):
+    if v.lower() in ('yes', 'true', 't', 'y', '1'):
+        return True
+    elif v.lower() in ('no', 'false', 'f', 'n', '0'):
+        return False
+    else:
+        raise argparse.ArgumentTypeError('Boolean value expected.')
 
 
 if __name__ == "__main__":
@@ -61,9 +77,14 @@ if __name__ == "__main__":
     parser.add_argument("result", help="Result folder containing detected label files")
     parser.add_argument("ground", help="Groud truth folder containing ground truth label files")
     parser.add_argument("number", help="Number of frames to evaluate",type=int)
+    parser.add_argument("is3D",help="True or False if you want to take into account the 3D information",type=str2bool)
+    parser.add_argument("--offset",help="Percentage (between 0 and 1) by which the 3D information may differ (default=0.05)",default=0.05,required=False,type=float)
     args = parser.parse_args()
 
+
     DEBUG = False
+    _3D = args.is3D
+    offset = args.offset
 
     N_FRAMES = args.number
 
@@ -92,13 +113,23 @@ if __name__ == "__main__":
             if (object == None): continue
 
             ratio = object.areaOverlap(label) / object.area()
+            true_distance = label.distance()
+            inferred_distance = object.distance()
 
             if ratio > 0.5:
-                # More than 50% overlap => correct detection
-                N_correct_detected = N_correct_detected + 1
+                # More than 50% overlap => correct 2D detection
                 print(label)
                 print(object)
                 print(ratio)
+                print("Detected distance: %.2f" % inferred_distance)
+                print("Wanted distance: %.2f" % true_distance)
+                if _3D:
+                    if not (true_distance * (1-offset) <= inferred_distance <= true_distance * (1+offset)):
+                        # Inferred 3D location is wrong
+                        print("3D condition failed!\n")
+                        continue
+
+                N_correct_detected = N_correct_detected + 1
                 print("\n")
                 if (DEBUG == True):
                     fig1 = plt.figure()
@@ -108,6 +139,8 @@ if __name__ == "__main__":
                     plt.ylim(1500)
                     plt.xlim(1500)
                     plt.show(fig1)
+
+
         # Update vars
         N_total_detected = N_total_detected + N_correct_detected
         N_total_false_negatives = N_total_false_negatives + max(0, (N_groundTruth - N_correct_detected))
