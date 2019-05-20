@@ -61,16 +61,19 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         //Create fused object with all lidar points mapped to image coordinates and propose a bounding box
         auto * object = new FusedObject();
         object->cameraData = new ObjectBoundingBox();
-        int minX=image->width,maxX=0,minY=image->height,maxY=0;
         for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
-            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.27); //Scale is predetermined at -3500
+            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.27); //Scale is predetermined at -3500 0.27 is the distance between the camera and lidar
             object->addPoint(*mappedPoint);
+         }
+        object->filterBiggestCluster(0.8); // Cluster again using a smaller treshold
 
-            // Propose a 2D bouding box for the cluster
-            if(minX > mappedPoint->getPictureX()) minX = (int) mappedPoint->getPictureX();
-            if(maxX < mappedPoint->getPictureX()) maxX = (int) mappedPoint->getPictureX();
-            if(minY > mappedPoint->getPictureY()) minY = (int) mappedPoint->getPictureY();
-            if(maxY < mappedPoint->getPictureY()) maxY = (int) mappedPoint->getPictureY();
+        int minX=image->width,maxX=0,minY=image->height,maxY=0;
+        for (auto it = object->lidarPoints->begin(); it != object->lidarPoints->end(); it++) {
+            // Propose a 2D bounding box for the cluster
+            if(minX > it->getPictureX()) minX = (int) it->getPictureX();
+            if(maxX < it->getPictureX()) maxX = (int) it->getPictureX();
+            if(minY > it->getPictureY()) minY = (int) it->getPictureY();
+            if(maxY < it->getPictureY()) maxY = (int) it->getPictureY();
         }
 
         // Update the object' bounding box and add an offset
@@ -121,7 +124,8 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         std::cout << "Detected class" << objects[0].Class << std::endl;
                         fusedObject->cameraData->Class = objects[0].Class;
                         fusedObject->cameraData->probability = objects[0].probability;
-                        markers.markers.emplace_back(fusedObject->calculateBoundingBox());
+                        fusedObject->calculateBoundingBox();
+                        //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
                         fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
                     }

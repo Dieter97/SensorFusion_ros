@@ -121,9 +121,10 @@ if __name__ == "__main__":
                 print(label)
                 print(object)
                 print(ratio)
-                print("Detected distance: %.2f" % inferred_distance)
-                print("Wanted distance: %.2f" % true_distance)
+
                 if _3D:
+                    print("Detected distance: %.2f" % inferred_distance)
+                    print("Wanted distance: %.2f" % true_distance)
                     if not (true_distance * (1-offset) <= inferred_distance <= true_distance * (1+offset)):
                         # Inferred 3D location is wrong
                         print("3D condition failed!\n")
