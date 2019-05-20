@@ -102,7 +102,7 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
     pcl::gpu::EuclideanClusterExtraction gec;
     gec.setClusterTolerance (segTresh); // 2cm
     gec.setMinClusterSize (2);
-    gec.setMaxClusterSize(200);
+    gec.setMaxClusterSize(25000);
     gec.setSearchMethod (octree_device);
     gec.setHostCloud(xyzCloudPtrFiltered);
     gec.extract (cluster_indices_gpu);

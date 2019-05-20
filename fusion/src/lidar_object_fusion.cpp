@@ -41,6 +41,7 @@ ros::Publisher pub, marker_pub;
 DarknetObject *d;
 int frame_id;
 float max = -1;
+std::string label_output_dir;
 
 /**
  * Map function
@@ -87,9 +88,6 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
     cv::imwrite("/tmp/tmp.png", cv_ptr->image);
     auto start = std::chrono::high_resolution_clock::now();
     std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png", 0.5f, 0.5f, 0.45f);
-    auto finish = std::chrono::high_resolution_clock::now();
-    std::chrono::duration<double> elapsed = finish - start;
-    std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
 
     // Convert cameraObjects into fused objects
     for (const auto &bounding_box : objects) {
@@ -121,19 +119,26 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
         }
     }
 
+    auto finish = std::chrono::high_resolution_clock::now();
+    std::chrono::duration<double> elapsed = finish - start;
+    std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
+
     // Create output labels file
-    std::ofstream file;
     char path[100];
-    sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0022/data/%06d.txt", frame_id);
-    file.open(path);
-    file.close();
+    if(!label_output_dir.empty() && label_output_dir != " ") {
+        std::ofstream file;
+        sprintf(path, "%s/%06d.txt", label_output_dir.c_str(), frame_id);
+        file.open(path);
+        file.close();
+    }
 
     // Draw objects & calculate a 3D bounding box for the object
     visualization_msgs::MarkerArray markers;
     for (const auto &fusedObject: *fusedObjects) {
         fusedObject->filterBiggestCluster(0.8);
+        fusedObject->calculateBoundingBox();
         fusedObject->outputToLabelFile(path);
-        markers.markers.emplace_back(fusedObject->calculateBoundingBox());
+        //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
         fusedObject->drawObject(cv_ptr);
     }
 
@@ -149,11 +154,8 @@ int main(int argc, char **argv) {
 
     ros::NodeHandle nh;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw",
-                                                 400); ///carla/ego_vehicle/camera/rgb/front/image_color
-    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped",
-                                                      400); ///lidar/detection/out/cropped
-    //message_filters::Subscriber<CameraObjects> object_sub(nh, "/camera/detection/out", 1);
+    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 400); ///carla/ego_vehicle/camera/rgb/front/image_color
+    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 400); ///lidar/detection/out/cropped
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 
     Synchronizer<MySyncPolicy> sync(MySyncPolicy(400), image_sub, info_sub);
@@ -168,6 +170,9 @@ int main(int argc, char **argv) {
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0,
                           "/home/dieter/darknet/cfg/coco.data");
     frame_id = 0;
+
+    std::cout << "Label output dir (empty if no label output): ";
+    std::cin >> label_output_dir;
 
     ros::spin();
 

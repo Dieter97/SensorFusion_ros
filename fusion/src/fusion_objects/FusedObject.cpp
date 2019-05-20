@@ -8,17 +8,20 @@
 
 FusedObject::FusedObject() {
     this->cameraData = nullptr;
+    this->bbox = nullptr;
     this->lidarPoints = new std::vector<MappedPoint>;
 }
 
 FusedObject::FusedObject(ObjectBoundingBox *cameraData) {
     this->cameraData = cameraData;
+    this->bbox = nullptr;
     this->lidarPoints = new std::vector<MappedPoint>;
     this->setRandomColor();
 }
 
 FusedObject::FusedObject(ObjectBoundingBox *cameraData, std::vector<MappedPoint> *points) {
     this->cameraData = cameraData;
+    this->bbox = nullptr;
     this->lidarPoints = points;
 }
 
@@ -167,7 +170,7 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     return marker;
 }
 */
-visualization_msgs::Marker FusedObject::calculateBoundingBox() {
+visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
     for (auto &point : *this->lidarPoints) {
@@ -183,45 +186,45 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     pcl::getMinMax3D(*cloud, min, max);
 
     uint32_t shape = visualization_msgs::Marker::POINTS;
-    visualization_msgs::Marker marker;
+    this->bbox = new visualization_msgs::Marker();
     //marker.header.frame_id = cloud->header.frame_id;
-    marker.header.frame_id = "velo_link";
-    marker.header.stamp = ros::Time::now();
+    this->bbox->header.frame_id = "velo_link";
+    this->bbox->header.stamp = ros::Time::now();
 
     //marker.ns = ns;
     //marker.id = id;
-    marker.type = shape;
-    marker.action = visualization_msgs::Marker::ADD;
+    this->bbox->type = shape;
+    this->bbox->action = visualization_msgs::Marker::ADD;
 
-    marker.pose.position.x = centroid[0];
-    marker.pose.position.y = centroid[1];
-    marker.pose.position.z = centroid[2];
-    marker.pose.orientation.x = 0.0;
-    marker.pose.orientation.y = 0.0;
-    marker.pose.orientation.z = 0.0;
-    marker.pose.orientation.w = 1.0;
+    this->bbox->pose.position.x = centroid[0];
+    this->bbox->pose.position.y = centroid[1];
+    this->bbox->pose.position.z = centroid[2];
+    this->bbox->pose.orientation.x = 0.0;
+    this->bbox->pose.orientation.y = 0.0;
+    this->bbox->pose.orientation.z = 0.0;
+    this->bbox->pose.orientation.w = 1.0;
 
-    marker.scale.x = (max[0] - min[0]);
-    marker.scale.y = (max[1] - min[1]);
-    marker.scale.z = (max[2] - min[2]);
+    this->bbox->scale.x = (max[0] - min[0]);
+    this->bbox->scale.y = (max[1] - min[1]);
+    this->bbox->scale.z = (max[2] - min[2]);
 
-    if (marker.scale.x == 0)
-        marker.scale.x = 0.1;
+    if (this->bbox->scale.x == 0)
+        this->bbox->scale.x = 0.1;
 
-    if (marker.scale.y == 0)
-        marker.scale.y = 0.1;
+    if (this->bbox->scale.y == 0)
+        this->bbox->scale.y = 0.1;
 
-    if (marker.scale.z == 0)
-        marker.scale.z = 0.1;
+    if (this->bbox->scale.z == 0)
+        this->bbox->scale.z = 0.1;
 
-    marker.color.r = 1;
-    marker.color.g = 1;
-    marker.color.b = 1;
-    marker.color.a = 0.5;
+    this->bbox->color.r = 1;
+    this->bbox->color.g = 1;
+    this->bbox->color.b = 1;
+    this->bbox->color.a = 0.5;
 
-    marker.lifetime = ros::Duration();
+    this->bbox->lifetime = ros::Duration();
 //   marker.lifetime = ros::Duration(0.5);
-    return marker;
+    return this->bbox;
 }
 
 void FusedObject::outputToLabelFile(char *fileLocation) {
@@ -232,8 +235,10 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     }
 
     outfile.open(fileLocation, std::ios_base::app);
-    if (outfile.fail())
-        throw std::ios_base::failure(std::strerror(errno));
+    if (outfile.fail()) {
+        //throw std::ios_base::failure(std::strerror(errno));
+        return;
+    }
 
     // First the label
     outfile << "Car ";
@@ -254,11 +259,22 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     outfile << std::defaultfloat << (cameraData->y + cameraData->h / 2) << " "; //Y2
 
     //3D boundingbox
-    outfile << "-1 "; //H
-    outfile << "-1 "; //W
-    outfile << "-1 "; //L
-    outfile << "-1000 -1000 -1000 "; //t
-    outfile << "-10 "; //ry
+    if(!this->bbox) {
+        outfile << "-1 "; //H
+        outfile << "-1 "; //W
+        outfile << "-1 "; //L
+        outfile << "-1000 -1000 -1000 "; //t
+        outfile << "-10 "; //ry
+    } else {
+        outfile << std::defaultfloat << this->bbox->scale.x << " "; //H
+        outfile << std::defaultfloat << this->bbox->scale.y << " "; //W
+        outfile << std::defaultfloat << this->bbox->scale.z << " "; //L
+        outfile << std::defaultfloat << this->bbox->pose.position.x << " "; //tx
+        outfile << std::defaultfloat << this->bbox->pose.position.y << " "; //ty
+        outfile << std::defaultfloat << this->bbox->pose.position.z << " "; //tz
+        outfile << "-10 "; //ry
+    }
+
 
     //Score
     outfile << std::defaultfloat << this->cameraData->probability << " ";
@@ -267,4 +283,8 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     outfile << std::endl;
 
     outfile.close();
+}
+
+void FusedObject::setBbox(visualization_msgs::Marker *bbox) {
+    FusedObject::bbox = bbox;
 }

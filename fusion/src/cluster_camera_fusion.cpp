@@ -37,6 +37,8 @@ ros::Publisher pub, marker_pub;
 DarknetObject * d;
 float max = -1;
 int frame_id;
+std::string label_output_dir;
+
 /**
  * Callback function, time synchronized callback function to process the data
  * @param image
@@ -91,11 +93,15 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
     }
 
     // Create output labels file
-    //std::ofstream file;
-    //char path[100];
-    //sprintf(path, "/home/dieter/Documents/Kitti/benchmark/cpp/results/0059/data/%06d.txt", frame_id);
-    //file.open(path);
-    //file.close();
+    char path[100];
+    if(!label_output_dir.empty() && label_output_dir != " ") {
+        std::ofstream file;
+        sprintf(path, "%s/%06d.txt", label_output_dir.c_str(), frame_id);
+        file.open(path);
+        file.close();
+    }
+
+    auto start = std::chrono::high_resolution_clock::now();
 
     // Loop through all clusters, perform object detection and draw
     visualization_msgs::MarkerArray markers;
@@ -106,21 +112,17 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         cv::Mat miniMat;
         if(rect.x > 0 && rect.x < image->width && rect.x+rect.width > 0 && rect.x+rect.width < image->width){
             if(rect.y > 0 && rect.y < image->height && rect.y+rect.height > 0 && rect.y+rect.height < image->height){
-                if ((rect.width * rect.height) > 800) { //Require the boudning box to have a minimum area
+                if ((rect.width * rect.height) > 800) { //Require the bounding box to have a minimum area
                     miniMat = cv_ptr->image(rect);
                     cv::imwrite("/tmp/tmp.png", miniMat);
-                    auto start = std::chrono::high_resolution_clock::now();
-                    std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png", 0.5f,
-                                                                                                  0.5f, 0.45f);
-                    auto finish = std::chrono::high_resolution_clock::now();
-                    std::chrono::duration<double> elapsed = finish - start;
-                    std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
+                    // Detect objects in image based on bounding box
+                    std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png", 0.5f,0.5f, 0.45f);
                     if (!objects.empty()) {
                         std::cout << "Detected class" << objects[0].Class << std::endl;
                         fusedObject->cameraData->Class = objects[0].Class;
                         fusedObject->cameraData->probability = objects[0].probability;
                         markers.markers.emplace_back(fusedObject->calculateBoundingBox());
-                        //fusedObject->outputToLabelFile(path);
+                        fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
                     }
                 }
@@ -129,14 +131,12 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         }
 
     }
-/*
-    cv::imwrite("/tmp/tmp.png", cv_ptr->image);
-    auto start = std::chrono::high_resolution_clock::now();
-    std::vector<sensor_fusion_msg::ObjectBoundingBox> objects = d->detect_objects("/tmp/tmp.png",0.5f,0.5f,0.45f);
+
     auto finish = std::chrono::high_resolution_clock::now();
     std::chrono::duration<double> elapsed = finish - start;
     std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
-*/
+
+    // Publish outputs
     marker_pub.publish(markers);
     pub.publish(cv_ptr->toImageMsg());
 
@@ -164,6 +164,9 @@ int main(int argc, char **argv) {
     d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg", "/home/dieter/darknet/data/yolov2-tiny.weights",
                           0, "/home/dieter/darknet/cfg/coco.data");
     frame_id = 0;
+
+    std::cout << "Label output dir (empty if no label output): ";
+    std::cin >> label_output_dir;
 
     ros::spin();
 

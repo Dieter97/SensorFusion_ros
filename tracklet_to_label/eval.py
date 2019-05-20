@@ -60,11 +60,12 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("result", help="Result folder containing detected label files")
     parser.add_argument("ground", help="Groud truth folder containing ground truth label files")
+    parser.add_argument("number", help="Number of frames to evaluate",type=int)
     args = parser.parse_args()
 
     DEBUG = False
 
-    N_FRAMES = 400
+    N_FRAMES = args.number
 
     # Result var
     N_total_ground = 0
@@ -74,8 +75,7 @@ if __name__ == "__main__":
 
     for i in range(0, N_FRAMES):
         res = Frame("%s/%06d.txt" % (args.result, i))  # /home/dieter/Documents/Kitti/benchmark/cpp/results/0029/data
-        ground = Frame(
-            "%s/%06d.txt" % (args.ground, i))  # /home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2
+        ground = Frame("%s/%06d.txt" % (args.ground, i))  # /home/dieter/Documents/Kitti/benchmark/cpp/data/object/label_2
 
         N_detection = len(res.labels)
         N_groundTruth = len(ground.labels)
