@@ -1,12 +1,12 @@
 function tracklet_to_label(base_dir,calib_dir)
-
+output_dir = '/home/dieter/Documents/Results/0059/ground/data';
 
 % clear and close everything
 close all; dbstop error; clc;
 disp('======= KITTI DevKit Tracklet to labels =======');
 
 if nargin<1
-  base_dir = '/home/dieter/Documents/Kitti/2011_09_26/2011_09_26_drive_0022_sync';
+  base_dir = '/home/dieter/Documents/Kitti/2011_09_26/2011_09_26_drive_0059_sync';
 end
 if nargin<2
   calib_dir = '/home/dieter/Documents/Kitti/2011_09_26';
@@ -61,7 +61,7 @@ face_idx = [ 1,2,6,5   % front face
 % main loop (start at first image of sequence)
 img_idx = 0;
 while img_idx ~= nimages
-  fileID = fopen(sprintf('/home/dieter/Documents/Results/0022/ground/data/%06d.txt',img_idx) ,'a');
+  fileID = fopen(sprintf('%s/%06d.txt', output_dir, img_idx) ,'a');
   fclose(fileID);
   % compute bounding boxes for visible tracklets
   for it = 1:numel(tracklets)
@@ -120,7 +120,7 @@ while img_idx ~= nimages
     end
     
     % Output tracklet to label file
-    fileID = fopen(sprintf('/home/dieter/Documents/Results/0022/ground/data/%06d.txt',img_idx) ,'a');
+    fileID = fopen(sprintf('%s/%06d.txt', output_dir, img_idx) ,'a');
     % Object label
     fprintf(fileID,'%s ',tracklets{it}.objectType);
     % Truncation

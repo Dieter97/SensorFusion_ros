@@ -66,7 +66,7 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
             auto * mappedPoint = new MappedPoint(*it, image->width, image->height, scale, cameraPlane); //Scale is predetermined at -3500 0.27 is the distance between the camera and lidar
             object->addPoint(*mappedPoint);
          }
-        object->filterBiggestCluster(0.8); // Cluster again using a smaller treshold
+        object->filterBiggestCluster(0.8); // Cluster again using a smaller threshold
 
         int minX=image->width,maxX=0,minY=image->height,maxY=0;
         for (auto it = object->lidarPoints->begin(); it != object->lidarPoints->end(); it++) {
@@ -125,6 +125,11 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         std::cout << "Detected class" << objects[0].Class << std::endl;
                         fusedObject->cameraData->Class = objects[0].Class;
                         fusedObject->cameraData->probability = objects[0].probability;
+                        fusedObject->cameraData->x = pt1.x + objects[0].x;
+                        fusedObject->cameraData->y = pt1.y + objects[0].y;
+                        fusedObject->cameraData->w = objects[0].w;
+                        fusedObject->cameraData->h = objects[0].h;
+                        fusedObject->filterPointCloudOutsideBB();
                         fusedObject->calculateBoundingBox();
                         //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
                         fusedObject->outputToLabelFile(path);

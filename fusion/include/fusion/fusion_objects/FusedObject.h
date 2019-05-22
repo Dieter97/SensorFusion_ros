@@ -55,6 +55,8 @@ public:
     visualization_msgs::Marker* calculateBoundingBox();
 
     void outputToLabelFile(char *fileLocation);
+
+    void filterPointCloudOutsideBB();
 };
 
 

@@ -109,8 +109,23 @@ void FusedObject::filterBiggestCluster(float tolerance) {
         }
     }
 
-    int end = this->lidarPoints->empty();
+    int end = this->lidarPoints->size();
 
+    std::cout << "Removed " << start - end << " points" << std::endl;
+}
+
+void FusedObject::filterPointCloudOutsideBB() {
+    int i = 0;
+    int start = this->lidarPoints->size();
+    for (auto &point : *this->lidarPoints) {
+        if (!(this->cameraData->x - this->cameraData->w / 2 < point.getPictureX() && point.getPictureX() < this->cameraData->x + this->cameraData->w / 2)) {
+            if (!(this->cameraData->y - this->cameraData->h / 2 < point.getPictureY() && point.getPictureY() < this->cameraData->y + this->cameraData->h / 2)) {
+                this->lidarPoints->erase(this->lidarPoints->begin() + i);
+            }
+        }
+        i++;
+    }
+    int end = this->lidarPoints->size();
     std::cout << "Removed " << start - end << " points" << std::endl;
 }
 
