@@ -1,0 +1,22 @@
+<launch>
+
+    <node name="cloud_crop" pkg="lidar" type="cloud_crop">
+        <remap from="input" to="/kitti/velo/pointcloud" />
+    </node>
+
+   <node name="clusteringCUDA" pkg="lidar" type="clusteringCUDA">
+	<param name="threshold" type="double" value="2.1"/>     
+   </node>	
+
+    <node name="camera_based_fusion" pkg="fusion" type="cluster_camera_fusion" output="screen">
+	<param name="label" type="str" value="/home/dieter/Documents/Results/0022/results/fusion2/data" />        
+	<param name="cameraInput" type="str" value="/kitti/camera_color_left/image_raw"/>
+	<param name="bufferSize" type="int" value="400"/>
+	<param name="cameraPlane" type="double" value="0.27"/>
+	<param name="projectionScale" type="double" value="-3500"/>	
+    </node>
+
+</launch>
+<!--<node name="feature_based_fuser" pkg="fusion" type="lidar_object_fusion" />-->
+<!-- <node name="object_detector" pkg="cameraPy" type="object-detection.py" /> -->
+
