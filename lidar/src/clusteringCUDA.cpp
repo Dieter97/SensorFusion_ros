@@ -158,10 +158,12 @@ void cloud_cb(const sensor_msgs::PointCloud2ConstPtr &cloud_msg) {
 int main(int argc, char *argv[]) {
     // Initialize ROS
     ros::init(argc, argv, "lidar");
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
 
-    std::cout << "Starting clustering Ros node! Threshold value: ";
-    std::cin >> segTresh;
+    nh.getParam("threshold", segTresh);
+
+    //std::cout << "Starting clustering Ros node! Threshold value: ";
+    //std::cin >> segTresh;
 
     // Create a ROS subscriber for the input point cloud
     ros::Subscriber sub = nh.subscribe<sensor_msgs::PointCloud2>("/lidar/detection/out/cropped", 10,

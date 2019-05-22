@@ -126,8 +126,8 @@ include_directories(
   ${OpenCV_INCLUDE_DIRS}
 )
 
-add_executable(image_converter src/image_converter.cpp)
-target_link_libraries(image_converter ${catkin_LIBRARIES} ${OpenCV_LIBS})
+#add_executable(image_converter src/image_converter.cpp)
+#target_link_libraries(image_converter ${catkin_LIBRARIES} ${OpenCV_LIBS})
 
 ## Declare a C++ library
 # add_library(${PROJECT_NAME}

@@ -149,14 +149,18 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "clustering_based_fuser");
+    ros::NodeHandle nh("~");
+    std::string cameraInput;
+    int bufferSize = 20;
+    nh.getParam("label", label_output_dir);
+    nh.getParam("cameraInput", cameraInput);
+    nh.getParam("bufferSize", bufferSize);
 
-    ros::NodeHandle nh;
-
-    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 400);
-    message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", 400);
+    message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///kitti/camera_color_left/image_raw
+    message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", bufferSize);
     typedef sync_policies::ApproximateTime<Image, sensor_fusion_msg::LidarClusters> MySyncPolicy;
 
-    Synchronizer<MySyncPolicy> sync(MySyncPolicy(400), image_sub, info_sub);
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(bufferSize), image_sub, info_sub);
     sync.registerCallback(boost::bind(&callback, _1, _2));
 
     // Create a ROS publisher for the output point cloud
@@ -165,12 +169,9 @@ int main(int argc, char **argv) {
     //End point to publish markers
     marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
 
-    d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg", "/home/dieter/darknet/data/yolov2-tiny.weights",
-                          0, "/home/dieter/darknet/cfg/coco.data");
+    d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg", "/home/dieter/darknet/data/yolov2-tiny.weights", 0, "/home/dieter/darknet/cfg/coco.data");
     frame_id = 0;
 
-    std::cout << "Label output dir (empty if no label output): ";
-    std::cin >> label_output_dir;
 
     ros::spin();
 

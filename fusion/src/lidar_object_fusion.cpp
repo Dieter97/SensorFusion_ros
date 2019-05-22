@@ -152,13 +152,21 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "feature_based_fuser");
 
-    ros::NodeHandle nh;
+    //std::cout << "Label output dir (empty if no label output): ";
+    //std::cin >> label_output_dir;
 
-    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 400); ///carla/ego_vehicle/camera/rgb/front/image_color
-    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 400); ///lidar/detection/out/cropped
+    ros::NodeHandle nh("~");
+    std::string cameraInput;
+    int bufferSize = 20;
+    nh.getParam("cameraInput", cameraInput);
+    nh.getParam("label", label_output_dir);
+    nh.getParam("bufferSize", bufferSize);
+
+    message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///carla/ego_vehicle/camera/rgb/front/image_color /kitti/camera_gray_left/image_raw
+    message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", bufferSize); ///lidar/detection/out/cropped
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 
-    Synchronizer<MySyncPolicy> sync(MySyncPolicy(400), image_sub, info_sub);
+    Synchronizer<MySyncPolicy> sync(MySyncPolicy(bufferSize), image_sub, info_sub);
     sync.registerCallback(boost::bind(&callback, _1, _2));
 
     // Create a ROS publisher for the output point cloud
@@ -167,12 +175,10 @@ int main(int argc, char **argv) {
     //End point to publish markers
     marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
 
-    d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0,
-                          "/home/dieter/darknet/cfg/coco.data");
+    d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0, "/home/dieter/darknet/cfg/coco.data");
     frame_id = 0;
 
-    std::cout << "Label output dir (empty if no label output): ";
-    std::cin >> label_output_dir;
+
 
     ros::spin();
 
