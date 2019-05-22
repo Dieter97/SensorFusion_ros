@@ -41,6 +41,7 @@ ros::Publisher pub, marker_pub;
 DarknetObject *d;
 int frame_id;
 float max = -1;
+double cameraPlane, scale;
 std::string label_output_dir;
 
 /**
@@ -104,8 +105,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
     // Go through all pointcloud points to associate them with a bounding box
     for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
         // First map the point to image coordinates
-        auto *mappedPoint = new MappedPoint(*it, image->width, image->height, -3500,
-                                            0.27); //Scale is predetermined at -3500
+        auto *mappedPoint = new MappedPoint(*it, image->width, image->height, scale, cameraPlane); //Scale is predetermined at -3500
 
         // Associate the points to a detected object
         for (const auto &fusedObject: *fusedObjects) {
@@ -161,6 +161,8 @@ int main(int argc, char **argv) {
     nh.getParam("cameraInput", cameraInput);
     nh.getParam("label", label_output_dir);
     nh.getParam("bufferSize", bufferSize);
+    nh.getParam("cameraPlane", cameraPlane);
+    nh.getParam("projectionScale", scale);
 
     message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///carla/ego_vehicle/camera/rgb/front/image_color /kitti/camera_gray_left/image_raw
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", bufferSize); ///lidar/detection/out/cropped

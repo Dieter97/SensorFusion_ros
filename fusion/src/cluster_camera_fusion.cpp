@@ -37,6 +37,7 @@ ros::Publisher pub, marker_pub;
 DarknetObject * d;
 float max = -1;
 int frame_id;
+double cameraPlane, scale;
 std::string label_output_dir;
 
 /**
@@ -62,7 +63,7 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
         auto * object = new FusedObject();
         object->cameraData = new ObjectBoundingBox();
         for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
-            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, -3500, 0.27); //Scale is predetermined at -3500 0.27 is the distance between the camera and lidar
+            auto * mappedPoint = new MappedPoint(*it, image->width, image->height, scale, cameraPlane); //Scale is predetermined at -3500 0.27 is the distance between the camera and lidar
             object->addPoint(*mappedPoint);
          }
         object->filterBiggestCluster(0.8); // Cluster again using a smaller treshold
@@ -155,6 +156,8 @@ int main(int argc, char **argv) {
     nh.getParam("label", label_output_dir);
     nh.getParam("cameraInput", cameraInput);
     nh.getParam("bufferSize", bufferSize);
+    nh.getParam("cameraPlane", cameraPlane);
+    nh.getParam("projectionScale", scale);
 
     message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///kitti/camera_color_left/image_raw
     message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", bufferSize);
