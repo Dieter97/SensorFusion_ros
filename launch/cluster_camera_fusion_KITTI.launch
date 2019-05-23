@@ -8,14 +8,17 @@
     </node>
 
     <node name="camera_based_fusion" pkg="fusion" type="cluster_camera_fusion" output="screen">
-        <param name="label" type="str" value="/home/dieter/Documents/Results/0002/results/fusion2/data"/>
+        <param name="label" type="str" value=""/>
         <param name="cameraInput" type="str" value="/kitti/camera_color_left/image_raw"/>
-        <param name="bufferSize" type="int" value="400"/>
+        <param name="bufferSize" type="int" value="10"/>
         <param name="cameraPlane" type="double" value="0.27"/>
         <param name="projectionScale" type="double" value="-3500"/>
         <param name="darknetCfg" type="str" value="/home/dieter/darknet/cfg/yolov2-tiny.cfg"/>
         <param name="darknetWeights" type="str" value="/home/dieter/darknet/data/yolov2-tiny.weights"/>
         <param name="darknetDataSet" type="str" value="/home/dieter/darknet/cfg/coco.data"/>
+        <param name="copX" type="double" value="0.054"/>
+        <param name="copY" type="double" value="0.0"/>
+        <param name="copZ" type="double" value="0.0"/>
     </node>
 </launch>
 <!--<node name="feature_based_fuser" pkg="fusion" type="lidar_object_fusion" />-->
