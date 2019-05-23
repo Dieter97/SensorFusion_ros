@@ -128,7 +128,7 @@ void FusedObject::filterPointCloudOutsideBB() {
     int end = this->lidarPoints->size();
     std::cout << "Removed " << start - end << " points" << std::endl;
 }
-
+/*
 visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -184,7 +184,7 @@ visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
 
     return this->bbox;
 }
-/*
+*/
 visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -241,7 +241,7 @@ visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
 //   marker.lifetime = ros::Duration(0.5);
     return this->bbox;
 }
-*/
+
 void FusedObject::outputToLabelFile(char *fileLocation) {
     std::ofstream outfile;
 
