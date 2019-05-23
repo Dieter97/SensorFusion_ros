@@ -128,8 +128,8 @@ void FusedObject::filterPointCloudOutsideBB() {
     int end = this->lidarPoints->size();
     std::cout << "Removed " << start - end << " points" << std::endl;
 }
-/*
-visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
+
+visualization_msgs::MarkerPtr FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
     for (auto &point : *this->lidarPoints) {
@@ -158,34 +158,38 @@ visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     const Eigen::Vector3f meanDiagonal = 0.5f * (maxPoint.getVector3fMap() + minPoint.getVector3fMap());
 
     // Final transform
-    const Eigen::Quaternionf bboxQuaternion(eigenVectorsPCA); //Quaternions are a way to do rotations https://www.youtube.com/watch?v=mHVwd8gYLnI
+    const Eigen::Quaternionf bboxQuaternion(eigenVectorsPCA);
     const Eigen::Vector3f bboxTransform = eigenVectorsPCA * meanDiagonal + pcaCentroid.head<3>();
 
-    this->bbox = new visualization_msgs::Marker();
-    this->bbox->header.frame_id = "velo_link";
-    this->bbox->header.stamp = ros::Time::now();
-    this->bbox->type = visualization_msgs::Marker::CUBE;
-    this->bbox->action = visualization_msgs::Marker::ADD;
-    this->bbox->pose.position.x = bboxTransform[0];
-    this->bbox->pose.position.y = bboxTransform[1];
-    this->bbox->pose.position.z = bboxTransform[2];
-    this->bbox->pose.orientation.x = bboxQuaternion.x();
-    this->bbox->pose.orientation.y = bboxQuaternion.y();
-    this->bbox->pose.orientation.z = bboxQuaternion.z();
-    this->bbox->pose.orientation.w = bboxQuaternion.w();
-    this->bbox->scale.x = maxPoint.x - minPoint.x;
-    this->bbox->scale.y = maxPoint.y - minPoint.y;
-    this->bbox->scale.z = maxPoint.z - minPoint.z;
-    this->bbox->color.a = 1.0; // Don't forget to set the alpha!
-    this->bbox->color.r = 0.0;
-    this->bbox->color.g = 1.0;
-    this->bbox->color.b = 0.0;
-    this->bbox->lifetime = ros::Duration();
+    visualization_msgs::MarkerPtr newBox (new visualization_msgs::Marker());
+    newBox->header.frame_id = "velo_link";
+    newBox->ns = "objects";
+    newBox->id = rand();
+    newBox->header.stamp = ros::Time::now();
+    newBox->type = visualization_msgs::Marker::CUBE;
+    newBox->action = visualization_msgs::Marker::ADD;
+    newBox->pose.position.x = bboxTransform[0];
+    newBox->pose.position.y = bboxTransform[1];
+    newBox->pose.position.z = bboxTransform[2];
+    newBox->pose.orientation.x = bboxQuaternion.x();
+    newBox->pose.orientation.y = bboxQuaternion.y();
+    newBox->pose.orientation.z = bboxQuaternion.z();
+    newBox->pose.orientation.w = bboxQuaternion.w();
+    newBox->scale.x = maxPoint.x - minPoint.x;
+    newBox->scale.y = maxPoint.y - minPoint.y;
+    newBox->scale.z = maxPoint.z - minPoint.z;
+    newBox->color.a = 1.0; // Don't forget to set the alpha!
+    newBox->color.r = 0.0;
+    newBox->color.g = 1.0;
+    newBox->color.b = 0.0;
+    newBox->lifetime = ros::Duration(0.1);
+
+    this->bbox = newBox;
 
     return this->bbox;
 }
-*/
-visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
+/*
+visualization_msgs::MarkerPtr FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
     for (auto &point : *this->lidarPoints) {
@@ -201,47 +205,49 @@ visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     pcl::getMinMax3D(*cloud, min, max);
 
     uint32_t shape = visualization_msgs::Marker::POINTS;
-    this->bbox = new visualization_msgs::Marker();
+
+    visualization_msgs::MarkerPtr newBox (new visualization_msgs::Marker());
     //marker.header.frame_id = cloud->header.frame_id;
-    this->bbox->header.frame_id = "velo_link";
-    this->bbox->header.stamp = ros::Time::now();
+    newBox->header.frame_id = "velo_link";
+    newBox->header.stamp = ros::Time::now();
 
-    //marker.ns = ns;
-    //marker.id = id;
-    this->bbox->type = shape;
-    this->bbox->action = visualization_msgs::Marker::ADD;
+    newBox->ns = "objects";
+    newBox->id = rand();
+    newBox->type = shape;
+    newBox->action = visualization_msgs::Marker::ADD;
 
-    this->bbox->pose.position.x = centroid[0];
-    this->bbox->pose.position.y = centroid[1];
-    this->bbox->pose.position.z = centroid[2];
-    this->bbox->pose.orientation.x = 0.0;
-    this->bbox->pose.orientation.y = 0.0;
-    this->bbox->pose.orientation.z = 0.0;
-    this->bbox->pose.orientation.w = 1.0;
+    newBox->pose.position.x = centroid[0];
+    newBox->pose.position.y = centroid[1];
+    newBox->pose.position.z = centroid[2];
+    newBox->pose.orientation.x = 0.0;
+    newBox->pose.orientation.y = 0.0;
+    newBox->pose.orientation.z = 0.0;
+    newBox->pose.orientation.w = 1.0;
 
-    this->bbox->scale.x = (max[0] - min[0]);
-    this->bbox->scale.y = (max[1] - min[1]);
-    this->bbox->scale.z = (max[2] - min[2]);
+    newBox->scale.x = (max[0] - min[0]);
+    newBox->scale.y = (max[1] - min[1]);
+    newBox->scale.z = (max[2] - min[2]);
 
-    if (this->bbox->scale.x == 0)
-        this->bbox->scale.x = 0.1;
+    if (newBox->scale.x == 0)
+        newBox->scale.x = 0.1;
 
-    if (this->bbox->scale.y == 0)
-        this->bbox->scale.y = 0.1;
+    if (newBox->scale.y == 0)
+        newBox->scale.y = 0.1;
 
-    if (this->bbox->scale.z == 0)
-        this->bbox->scale.z = 0.1;
+    if (newBox->scale.z == 0)
+        newBox->scale.z = 0.1;
 
-    this->bbox->color.r = 1;
-    this->bbox->color.g = 1;
-    this->bbox->color.b = 1;
-    this->bbox->color.a = 0.5;
+    newBox->color.r = 1;
+    newBox->color.g = 1;
+    newBox->color.b = 1;
+    newBox->color.a = 0.5;
 
-    this->bbox->lifetime = ros::Duration();
+    newBox->lifetime = ros::Duration(0.5);
+    this->bbox = newBox;
 //   marker.lifetime = ros::Duration(0.5);
     return this->bbox;
 }
-
+*/
 void FusedObject::outputToLabelFile(char *fileLocation) {
     std::ofstream outfile;
 
@@ -298,10 +304,6 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
     outfile << std::endl;
 
     outfile.close();
-}
-
-void FusedObject::setBbox(visualization_msgs::Marker *bbox) {
-    FusedObject::bbox = bbox;
 }
 
 void FusedObject::toMsg(FusedObjectsMsgPtr msg) {

@@ -8,8 +8,8 @@
         <param name="bufferSize" type="int" value="10"/>
         <param name="cameraPlane" type="double" value="0.27"/>
         <param name="projectionScale" type="double" value="-3500"/>
-        <param name="darknetCfg" type="str" value="/home/dieter/darknet/cfg/yolov3.cfg"/>
-        <param name="darknetWeights" type="str" value="/home/dieter/darknet/data/yolov3.weights"/>
+        <param name="darknetCfg" type="str" value="/home/dieter/darknet/cfg/yolov2-tiny.cfg"/>
+        <param name="darknetWeights" type="str" value="/home/dieter/darknet/data/yolov2-tiny.weights"/>
         <param name="darknetDataSet" type="str" value="/home/dieter/darknet/cfg/coco.data"/>
         <param name="copX" type="double" value="0.054"/>
         <param name="copY" type="double" value="0.0"/>

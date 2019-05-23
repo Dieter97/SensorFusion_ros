@@ -30,7 +30,7 @@ using namespace sensor_fusion_msg;
 class FusedObject {
 public:
     ObjectBoundingBox* cameraData;
-    visualization_msgs::Marker* bbox;
+    visualization_msgs::MarkerPtr bbox;
     std::vector<MappedPoint> *lidarPoints;
     int r,g,b;
 
@@ -45,15 +45,13 @@ public:
 
     void setRandomColor();
 
-    void setBbox(visualization_msgs::Marker *bbox);
-
     void addPoint(const MappedPoint& point);
 
     void drawObject(const cv_bridge::CvImagePtr &imagePtr);
 
     void filterBiggestCluster(float tolerance);
 
-    visualization_msgs::Marker* calculateBoundingBox();
+    visualization_msgs::MarkerPtr calculateBoundingBox();
 
     void outputToLabelFile(char *fileLocation);
 

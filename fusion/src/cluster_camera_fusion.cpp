@@ -109,7 +109,6 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
     auto start = std::chrono::high_resolution_clock::now();
 
     // Loop through all clusters, perform object detection and draw
-    visualization_msgs::MarkerArray markers;
     for(const auto &fusedObject: clusters) {
         cv::Point pt1((int)(fusedObject->cameraData->x-fusedObject->cameraData->w/2), (int)(fusedObject->cameraData->y-fusedObject->cameraData->h/2));
         cv::Point pt2((int)(fusedObject->cameraData->x+fusedObject->cameraData->w/2), (int)(fusedObject->cameraData->y+fusedObject->cameraData->h/2));
@@ -132,7 +131,7 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         fusedObject->cameraData->h = objects[0].h;
                         fusedObject->filterPointCloudOutsideBB();
                         fusedObject->calculateBoundingBox();
-                        //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
+                        marker_pub.publish(fusedObject->bbox);
                         fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
                         sensor_fusion_msg::FusedObjectsMsgPtr objectMsg (new sensor_fusion_msg::FusedObjectsMsg());
@@ -151,7 +150,6 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
     std::cout << "Time taken for object detection: " << elapsed.count() << std::endl;
 
     // Publish outputs
-    marker_pub.publish(markers);
     pub.publish(cv_ptr->toImageMsg());
 
     frame_id++;
@@ -187,7 +185,7 @@ int main(int argc, char **argv) {
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
 
     //End point to publish markers
-    marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
+    marker_pub = nh.advertise<visualization_msgs::Marker>("/fusion/bounding/out_array", 20);
 
     // End point to publish the fusedObjects
     fusedObject_pub = nh.advertise<sensor_fusion_msg::FusedObjectsMsg>("/fusion/objects/out", 20);
