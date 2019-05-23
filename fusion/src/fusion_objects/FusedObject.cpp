@@ -129,8 +129,7 @@ void FusedObject::filterPointCloudOutsideBB() {
     std::cout << "Removed " << start - end << " points" << std::endl;
 }
 
-/*
-visualization_msgs::Marker FusedObject::calculateBoundingBox() {
+visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
     for (auto &point : *this->lidarPoints) {
@@ -162,29 +161,30 @@ visualization_msgs::Marker FusedObject::calculateBoundingBox() {
     const Eigen::Quaternionf bboxQuaternion(eigenVectorsPCA); //Quaternions are a way to do rotations https://www.youtube.com/watch?v=mHVwd8gYLnI
     const Eigen::Vector3f bboxTransform = eigenVectorsPCA * meanDiagonal + pcaCentroid.head<3>();
 
-    visualization_msgs::Marker marker;
-    marker.header.frame_id = "base_link";
-    marker.header.stamp = ros::Time();
-    marker.type = visualization_msgs::Marker::CUBE;
-    marker.action = visualization_msgs::Marker::ADD;
-    marker.pose.position.x = bboxTransform[0];
-    marker.pose.position.y = bboxTransform[1];
-    marker.pose.position.z = bboxTransform[2];
-    marker.pose.orientation.x = bboxQuaternion.x();
-    marker.pose.orientation.y = bboxQuaternion.y();
-    marker.pose.orientation.z = bboxQuaternion.z();
-    marker.pose.orientation.w = bboxQuaternion.w();
-    marker.scale.x = maxPoint.x - minPoint.x;
-    marker.scale.y = maxPoint.y - minPoint.y;
-    marker.scale.z = maxPoint.z - minPoint.z;
-    marker.color.a = 1.0; // Don't forget to set the alpha!
-    marker.color.r = 0.0;
-    marker.color.g = 1.0;
-    marker.color.b = 0.0;
+    this->bbox = new visualization_msgs::Marker();
+    this->bbox->header.frame_id = "velo_link";
+    this->bbox->header.stamp = ros::Time::now();
+    this->bbox->type = visualization_msgs::Marker::CUBE;
+    this->bbox->action = visualization_msgs::Marker::ADD;
+    this->bbox->pose.position.x = bboxTransform[0];
+    this->bbox->pose.position.y = bboxTransform[1];
+    this->bbox->pose.position.z = bboxTransform[2];
+    this->bbox->pose.orientation.x = bboxQuaternion.x();
+    this->bbox->pose.orientation.y = bboxQuaternion.y();
+    this->bbox->pose.orientation.z = bboxQuaternion.z();
+    this->bbox->pose.orientation.w = bboxQuaternion.w();
+    this->bbox->scale.x = maxPoint.x - minPoint.x;
+    this->bbox->scale.y = maxPoint.y - minPoint.y;
+    this->bbox->scale.z = maxPoint.z - minPoint.z;
+    this->bbox->color.a = 1.0; // Don't forget to set the alpha!
+    this->bbox->color.r = 0.0;
+    this->bbox->color.g = 1.0;
+    this->bbox->color.b = 0.0;
+    this->bbox->lifetime = ros::Duration();
 
-    return marker;
+    return this->bbox;
 }
-*/
+/*
 visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
     // Construct pointcloud from fused object points
     pcl::PointCloud<pcl::PointXYZ>::Ptr cloud(new pcl::PointCloud<pcl::PointXYZ>());
@@ -241,7 +241,7 @@ visualization_msgs::Marker* FusedObject::calculateBoundingBox() {
 //   marker.lifetime = ros::Duration(0.5);
     return this->bbox;
 }
-
+*/
 void FusedObject::outputToLabelFile(char *fileLocation) {
     std::ofstream outfile;
 
@@ -305,13 +305,31 @@ void FusedObject::setBbox(visualization_msgs::Marker *bbox) {
 }
 
 void FusedObject::toMsg(FusedObjectsMsgPtr msg) {
+    // Camera data
     msg->cameraData.x = this->cameraData->x;
     msg->cameraData.y = this->cameraData->y;
     msg->cameraData.w = this->cameraData->w;
     msg->cameraData.h = this->cameraData->h;
     msg->cameraData.Class = this->cameraData->Class;
     msg->cameraData.probability = this->cameraData->probability;
-    //msg->bbox-> = this->bbox;
+
+    // Bounding box data
+    msg->bbox.type = this->bbox->type;
+    msg->bbox.action = this->bbox->action;
+    msg->bbox.pose.position.x = this->bbox->pose.position.x;
+    msg->bbox.pose.position.y = this->bbox->pose.position.y;
+    msg->bbox.pose.position.z = this->bbox->pose.position.z;
+    msg->bbox.pose.orientation.x = this->bbox->pose.orientation.x;
+    msg->bbox.pose.orientation.y = this->bbox->pose.orientation.y;
+    msg->bbox.pose.orientation.z = this->bbox->pose.orientation.z;
+    msg->bbox.pose.orientation.w = this->bbox->pose.orientation.w;
+    msg->bbox.scale.x = this->bbox->scale.x;
+    msg->bbox.scale.y = this->bbox->scale.y;
+    msg->bbox.scale.z = this->bbox->scale.z;
+    msg->bbox.color.a = this->bbox->color.a;
+    msg->bbox.color.r = this->bbox->color.r;
+    msg->bbox.color.g = this->bbox->color.g;
+    msg->bbox.color.b = this->bbox->color.b;
 
     // Construct vector of MappedPointMsgs
     std::vector<sensor_fusion_msg::MappedPointMsg> points;
@@ -334,6 +352,7 @@ void FusedObject::toMsg(FusedObjectsMsgPtr msg) {
     }
     msg->lidarPoints = points;
 
+    // Color
     msg->r = this->r;
     msg->g = this->g;
     msg->b = this->b;

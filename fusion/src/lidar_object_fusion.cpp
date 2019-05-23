@@ -191,8 +191,6 @@ int main(int argc, char **argv) {
     d = new DarknetObject(&darknetCfg[0], &darknetWeights[0], 0, &darknetDataSet[0]);
     frame_id = 0;
 
-
-
     ros::spin();
 
     return 0;
