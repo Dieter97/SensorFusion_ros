@@ -32,6 +32,7 @@ ros::Publisher pub;
 int scaleX = 20;
 float camera_plane = 0.2;
 float max = -1;
+float copX,copY,copZ;
 
 void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) {
     std::cout << "Cloud received" << std::endl;
@@ -55,7 +56,7 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
 
     // Go through all pointcloud points to draw them on the image
     for (auto it = pclCloud->begin(); it != pclCloud->end(); it++) {
-        auto * mappedPoint = new MappedPoint(*it, image->width, image->height, scaleX, camera_plane); //Scale is predetermined at -3500
+        auto * mappedPoint = new MappedPoint(*it, image->width, image->height, scaleX, camera_plane,copX,copY,copZ); //Scale is predetermined at -3500
         if (mappedPoint->getDistance() > max) max = mappedPoint->getDistance();
         float color = mappedPoint->map(mappedPoint->getDistance(), 0, max, 0, 255);
         int thickness = 6 - (int) mappedPoint->map(mappedPoint->getDistance(), 0, max, 1, 5);
@@ -70,14 +71,16 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
 int main(int argc, char **argv) {
     ros::init(argc, argv, "vision_node");
 
-    ros::NodeHandle nh;
+    ros::NodeHandle nh("~");
+    std::string cameraInput;
+    nh.getParam("cameraInput", cameraInput);
+    nh.getParam("cameraPlane", camera_plane);
+    nh.getParam("projectionScale", scaleX);
+    nh.getParam("copX", copX);
+    nh.getParam("copY", copY);
+    nh.getParam("copZ", copZ);
 
-    std::cout << "Scale: ";
-    std::cin >> scaleX;
-    std::cout << "Projection plane: ";
-    std::cin >> camera_plane;
-
-    message_filters::Subscriber<Image> image_sub(nh, "/kitti/camera_gray_left/image_raw", 1);
+    message_filters::Subscriber<Image> image_sub(nh, cameraInput, 1);
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", 1);
     typedef sync_policies::ApproximateTime<Image, PointCloud2> MySyncPolicy;
 

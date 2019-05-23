@@ -24,7 +24,7 @@ private:
     float copX,copY,copZ;
 
 public:
-    MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane);
+    MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane, float copX, float copY, float copZ);
 
     //Copy constructor
     MappedPoint(const MappedPoint &point);

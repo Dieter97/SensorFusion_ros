@@ -6,8 +6,8 @@
 
 #include "fusion/fusion_objects/MappedPoint.h"
 
-MappedPoint::MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane) {
-    this->copX = 0.054f; this->copY =  0; this->copZ = 0.0;
+MappedPoint::MappedPoint(pcl::PointXYZ point, int width, int height, int scale, float cameraPlane, float copX, float copY, float copZ) {
+    this->copX = copX; this->copY =  copY; this->copZ = copZ;
     this->point = point;
     this->screenWidth = width;
     this->screenHeight = height;
