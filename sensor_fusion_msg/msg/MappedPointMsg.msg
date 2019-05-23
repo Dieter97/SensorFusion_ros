@@ -1,0 +1,11 @@
+geometry_msgs/Point32 point
+float32 cameraPlane
+int32 screenWidth
+int32 screenHeight
+int32 scale
+float32 pictureX
+float32 pictureY
+float32 distance
+float32 copX
+float32 copY
+float32 copZ

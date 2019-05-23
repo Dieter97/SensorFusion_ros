@@ -37,7 +37,7 @@ using namespace sensor_fusion_msg;
 
 // Main program variables
 
-ros::Publisher pub, marker_pub;
+ros::Publisher pub, marker_pub, fusedObject_pub;
 DarknetObject *d;
 int frame_id;
 float max = -1;
@@ -140,6 +140,11 @@ void callback(const ImageConstPtr &image, const PointCloud2ConstPtr &cloud_msg) 
         fusedObject->outputToLabelFile(path);
         //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
         fusedObject->drawObject(cv_ptr);
+
+        // Publish fusedObject
+        sensor_fusion_msg::FusedObjectsMsgPtr objectMsg (new sensor_fusion_msg::FusedObjectsMsg());
+        fusedObject->toMsg(objectMsg);
+        fusedObject_pub.publish(objectMsg);
     }
 
     // Publish output
@@ -156,13 +161,16 @@ int main(int argc, char **argv) {
     //std::cin >> label_output_dir;
 
     ros::NodeHandle nh("~");
-    std::string cameraInput;
+    std::string cameraInput, darknetCfg, darknetWeights, darknetDataSet;
     int bufferSize = 20;
     nh.getParam("cameraInput", cameraInput);
     nh.getParam("label", label_output_dir);
     nh.getParam("bufferSize", bufferSize);
     nh.getParam("cameraPlane", cameraPlane);
     nh.getParam("projectionScale", scale);
+    nh.getParam("darknetCfg", darknetCfg);
+    nh.getParam("darknetWeights", darknetWeights);
+    nh.getParam("darknetDataSet", darknetDataSet);
 
     message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///carla/ego_vehicle/camera/rgb/front/image_color /kitti/camera_gray_left/image_raw
     message_filters::Subscriber<PointCloud2> info_sub(nh, "/lidar/detection/out/cropped", bufferSize); ///lidar/detection/out/cropped
@@ -177,7 +185,10 @@ int main(int argc, char **argv) {
     //End point to publish markers
     marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
 
-    d = new DarknetObject("/home/dieter/darknet/cfg/yolov3.cfg", "/home/dieter/darknet/data/yolov3.weights", 0, "/home/dieter/darknet/cfg/coco.data");
+    // End point to publish the fusedObjects
+    fusedObject_pub = nh.advertise<sensor_fusion_msg::FusedObjectsMsg>("/fusion/objects/out", 20);
+
+    d = new DarknetObject(&darknetCfg[0], &darknetWeights[0], 0, &darknetDataSet[0]);
     frame_id = 0;
 
 

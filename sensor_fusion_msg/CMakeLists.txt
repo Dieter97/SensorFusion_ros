@@ -16,6 +16,7 @@ find_package(catkin REQUIRED COMPONENTS
   sensor_msgs
   std_msgs
   pcl_msgs
+  visualization_msgs
 )
 
 ## Generate messages in the 'msg' folder
@@ -24,6 +25,8 @@ find_package(catkin REQUIRED COMPONENTS
          ObjectBoundingBox.msg
          CameraObjects.msg
          LidarClusters.msg
+         MappedPointMsg.msg
+         FusedObjectsMsg.msg
  )
 
 ## Generate services in the 'srv' folder
@@ -49,6 +52,7 @@ find_package(catkin REQUIRED COMPONENTS
          std_msgs
          pcl_msgs
          sensor_fusion_msg
+         visualization_msgs
  )
 
 ###################################
@@ -63,7 +67,7 @@ find_package(catkin REQUIRED COMPONENTS
 catkin_package(
   #INCLUDE_DIRS include
   LIBRARIES sensor_fusion_msg
-  CATKIN_DEPENDS actionlib_msgs geometry_msgs sensor_msgs std_msgs message_runtime
+  CATKIN_DEPENDS actionlib_msgs geometry_msgs sensor_msgs std_msgs message_runtime visualization_msgs
   #DEPENDS system_lib
 )
 

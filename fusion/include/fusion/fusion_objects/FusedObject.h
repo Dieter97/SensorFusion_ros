@@ -7,6 +7,7 @@
 
 #include <sensor_fusion_msg/ObjectBoundingBox.h>
 #include <sensor_fusion_msg/CameraObjects.h>
+#include <sensor_fusion_msg/FusedObjectsMsg.h>
 #include <visualization_msgs/Marker.h>
 #include <cv_bridge/cv_bridge.h>
 #include "MappedPoint.h"
@@ -57,6 +58,8 @@ public:
     void outputToLabelFile(char *fileLocation);
 
     void filterPointCloudOutsideBB();
+
+    void toMsg(sensor_fusion_msg::FusedObjectsMsgPtr message);
 };
 
 

@@ -10,6 +10,7 @@
 #include <sensor_msgs/Image.h>
 #include <sensor_msgs/PointCloud2.h>
 #include <sensor_fusion_msg/LidarClusters.h>
+#include <sensor_fusion_msg/FusedObjectsMsg.h>
 
 #include <opencv4/opencv2/imgproc/imgproc.hpp>
 #include <opencv4/opencv2/highgui/highgui.hpp>
@@ -30,10 +31,9 @@
 
 using namespace sensor_msgs;
 using namespace message_filters;
-using namespace sensor_fusion_msg;
 
 // Main program variables
-ros::Publisher pub, marker_pub;
+ros::Publisher pub, marker_pub, fusedObject_pub;
 DarknetObject * d;
 float max = -1;
 int frame_id;
@@ -134,6 +134,9 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
                         //markers.markers.emplace_back(fusedObject->calculateBoundingBox());
                         fusedObject->outputToLabelFile(path);
                         fusedObject->drawObject(cv_ptr);
+                        sensor_fusion_msg::FusedObjectsMsgPtr objectMsg (new sensor_fusion_msg::FusedObjectsMsg());
+                        fusedObject->toMsg(objectMsg);
+                        fusedObject_pub.publish(objectMsg);
                     }
                 }
 
@@ -156,13 +159,18 @@ void callback(const ImageConstPtr &image, const LidarClustersConstPtr &clusters_
 int main(int argc, char **argv) {
     ros::init(argc, argv, "clustering_based_fuser");
     ros::NodeHandle nh("~");
-    std::string cameraInput;
+
+    // First read set the parameters from launch file
+    std::string cameraInput, darknetCfg, darknetWeights, darknetDataSet;
     int bufferSize = 20;
     nh.getParam("label", label_output_dir);
     nh.getParam("cameraInput", cameraInput);
     nh.getParam("bufferSize", bufferSize);
     nh.getParam("cameraPlane", cameraPlane);
     nh.getParam("projectionScale", scale);
+    nh.getParam("darknetCfg", darknetCfg);
+    nh.getParam("darknetWeights", darknetWeights);
+    nh.getParam("darknetDataSet", darknetDataSet);
 
     message_filters::Subscriber<Image> image_sub(nh, cameraInput, bufferSize); ///kitti/camera_color_left/image_raw
     message_filters::Subscriber<sensor_fusion_msg::LidarClusters> info_sub(nh, "/lidar/detection/out/clusters", bufferSize);
@@ -171,13 +179,16 @@ int main(int argc, char **argv) {
     Synchronizer<MySyncPolicy> sync(MySyncPolicy(bufferSize), image_sub, info_sub);
     sync.registerCallback(boost::bind(&callback, _1, _2));
 
-    // Create a ROS publisher for the output point cloud
+    // Create a ROS publisher for the output image
     pub = nh.advertise<sensor_msgs::Image>("/camera/detection/out/image", 1);
 
     //End point to publish markers
     marker_pub = nh.advertise<visualization_msgs::MarkerArray>("/fusion/bounding/out", 20);
 
-    d = new DarknetObject("/home/dieter/darknet/cfg/yolov2-tiny.cfg", "/home/dieter/darknet/data/yolov2-tiny.weights", 0, "/home/dieter/darknet/cfg/coco.data");
+    // End point to publish the fusedObjects
+    fusedObject_pub = nh.advertise<sensor_fusion_msg::FusedObjectsMsg>("/fusion/objects/out", 20);
+
+    d = new DarknetObject(&darknetCfg[0], &darknetWeights[0], 0, &darknetDataSet[0]);
     frame_id = 0;
 
 

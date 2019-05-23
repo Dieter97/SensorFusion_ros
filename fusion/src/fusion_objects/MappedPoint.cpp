@@ -74,3 +74,31 @@ MappedPoint::MappedPoint(const MappedPoint &point) {
     this->pictureY = point.pictureY;
     this->cameraPlane = point.cameraPlane;
 }
+
+float MappedPoint::getCameraPlane() const {
+    return cameraPlane;
+}
+
+int MappedPoint::getScreenWidth() const {
+    return screenWidth;
+}
+
+int MappedPoint::getScreenHeight() const {
+    return screenHeight;
+}
+
+int MappedPoint::getScale() const {
+    return scale;
+}
+
+float MappedPoint::getCopX() const {
+    return copX;
+}
+
+float MappedPoint::getCopY() const {
+    return copY;
+}
+
+float MappedPoint::getCopZ() const {
+    return copZ;
+}

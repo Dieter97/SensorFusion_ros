@@ -303,3 +303,38 @@ void FusedObject::outputToLabelFile(char *fileLocation) {
 void FusedObject::setBbox(visualization_msgs::Marker *bbox) {
     FusedObject::bbox = bbox;
 }
+
+void FusedObject::toMsg(FusedObjectsMsgPtr msg) {
+    msg->cameraData.x = this->cameraData->x;
+    msg->cameraData.y = this->cameraData->y;
+    msg->cameraData.w = this->cameraData->w;
+    msg->cameraData.h = this->cameraData->h;
+    msg->cameraData.Class = this->cameraData->Class;
+    msg->cameraData.probability = this->cameraData->probability;
+    //msg->bbox-> = this->bbox;
+
+    // Construct vector of MappedPointMsgs
+    std::vector<sensor_fusion_msg::MappedPointMsg> points;
+    for (auto &point : *this->lidarPoints) {
+        sensor_fusion_msg::MappedPointMsg p;
+        p.cameraPlane = point.getCameraPlane();
+        p.scale = point.getScale();
+        p.pictureY = point.getPictureY();
+        p.pictureX = point.getPictureX();
+        p.screenWidth = point.getScreenWidth();
+        p.screenHeight = point.getScreenHeight();
+        p.copX = point.getCopX();
+        p.copY = point.getCopY();
+        p.copZ = point.getCopZ();
+        p.distance = point.getDistance();
+        p.point.x = point.getPCLPoint().x;
+        p.point.y = point.getPCLPoint().y;
+        p.point.z = point.getPCLPoint().z;
+        points.emplace_back(p);
+    }
+    msg->lidarPoints = points;
+
+    msg->r = this->r;
+    msg->g = this->g;
+    msg->b = this->b;
+}

@@ -51,6 +51,21 @@ public:
 
     pcl::PointXYZ getPCLPoint();
 
+    float getCameraPlane() const;
+
+    int getScreenWidth() const;
+
+    int getScreenHeight() const;
+
+    int getScale() const;
+
+    float getCopX() const;
+
+    float getCopY() const;
+
+    float getCopZ() const;
+
+
 };
 
 
