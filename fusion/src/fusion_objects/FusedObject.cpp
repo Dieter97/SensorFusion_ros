@@ -168,9 +168,9 @@ visualization_msgs::MarkerPtr FusedObject::calculateBoundingBox() {
     newBox->header.stamp = ros::Time::now();
     newBox->type = visualization_msgs::Marker::CUBE;
     newBox->action = visualization_msgs::Marker::ADD;
-    newBox->pose.position.x = bboxTransform[0];
-    newBox->pose.position.y = bboxTransform[1];
-    newBox->pose.position.z = bboxTransform[2];
+    newBox->pose.position.x = pcaCentroid[0];
+    newBox->pose.position.y = pcaCentroid[1];
+    newBox->pose.position.z = pcaCentroid[2];
     newBox->pose.orientation.x = bboxQuaternion.x();
     newBox->pose.orientation.y = bboxQuaternion.y();
     newBox->pose.orientation.z = bboxQuaternion.z();
