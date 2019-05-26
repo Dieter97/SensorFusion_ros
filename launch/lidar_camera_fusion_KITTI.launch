@@ -1,0 +1,13 @@
+<launch>
+    <node name="cloud_crop" pkg="lidar" type="cloud_crop">
+        <remap from="input" to="/kitti/velo/pointcloud" />
+    </node>
+    <node name="vision_node" pkg="fusion" type="lidar_camera_fusion" output="screen">
+        <param name="cameraInput" type="str" value="/kitti/camera_color_left/image_raw"/>
+        <param name="cameraPlane" type="double" value="0.27"/>
+        <param name="projectionScale" type="double" value="-3500"/>
+        <param name="copX" type="double" value="0.052"/>
+        <param name="copY" type="double" value="0.0"/>
+        <param name="copZ" type="double" value="0.0"/>
+    </node>
+</launch>

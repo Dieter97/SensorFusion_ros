@@ -1,0 +1,25 @@
+<launch>
+    <node name="cloud_crop" pkg="lidar" type="cloud_crop">
+        <remap from="input" to="/velodyne_points" />
+    </node>
+
+    <node name="clusteringCUDA" pkg="lidar" type="clusteringCUDA">
+       <param name="threshold" type="double" value="14"/>
+    </node>
+
+    <node name="camera_based_fusion" pkg="fusion" type="cluster_camera_fusion" output="screen">
+        <param name="label" type="str" value=""/>
+        <param name="cameraInput" type="str" value="/zed/zed_node/left_raw/image_raw_color"/>
+        <param name="bufferSize" type="int" value="10"/>
+        <param name="cameraPlane" type="double" value="0.2"/>
+        <param name="projectionScale" type="double" value="-4500"/>
+        <param name="darknetCfg" type="str" value="/home/dieter/darknet/cfg/yolov2-tiny.cfg"/>
+        <param name="darknetWeights" type="str" value="/home/dieter/darknet/data/yolov2-tiny.weights"/>
+        <param name="darknetDataSet" type="str" value="/home/dieter/darknet/cfg/coco.data"/>
+        <param name="copX" type="double" value="-0.080"/>
+        <param name="copY" type="double" value="0.0"/>
+        <param name="copZ" type="double" value="-0.02"/>
+    </node>
+</launch>
+<!--<node name="feature_based_fuser" pkg="fusion" type="lidar_object_fusion" />-->
+<!-- <node name="object_detector" pkg="cameraPy" type="object-detection.py" /> -->

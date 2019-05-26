@@ -1,17 +1,17 @@
 <launch>
     <node name="cloud_crop" pkg="lidar" type="cloud_crop">
-        <remap from="input" to="/kitti/velo/pointcloud" />
+        <remap from="input" to="/carla/ego_vehicle/lidar/front/point_cloud" />
     </node>
     <node name="camera_based_fusion" pkg="fusion" type="lidar_object_fusion" output="screen">
         <param name="label" type="str" value=""/>
-        <param name="cameraInput" type="str" value="/kitti/camera_color_left/image_raw"/>
-        <param name="bufferSize" type="int" value="400"/>
-        <param name="cameraPlane" type="double" value="0.27"/>
-        <param name="projectionScale" type="double" value="-3500"/>
+        <param name="cameraInput" type="str" value="/carla/ego_vehicle/camera/rgb/front/image_color"/>
+        <param name="bufferSize" type="int" value="10"/>
+        <param name="cameraPlane" type="double" value="0.3"/>
+        <param name="projectionScale" type="double" value="-2500"/>
         <param name="darknetCfg" type="str" value="/home/dieter/darknet/cfg/yolov3.cfg"/>
         <param name="darknetWeights" type="str" value="/home/dieter/darknet/data/yolov3.weights"/>
         <param name="darknetDataSet" type="str" value="/home/dieter/darknet/cfg/coco.data"/>
-        <param name="copX" type="double" value="0.054"/>
+        <param name="copX" type="double" value="0.0"/>
         <param name="copY" type="double" value="0.0"/>
         <param name="copZ" type="double" value="0.0"/>
     </node>

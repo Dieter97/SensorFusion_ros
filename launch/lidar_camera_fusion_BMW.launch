@@ -1,0 +1,13 @@
+<launch>
+    <node name="cloud_crop" pkg="lidar" type="cloud_crop">
+        <remap from="input" to="/velodyne_points" />
+    </node>
+    <node name="vision_node" pkg="fusion" type="lidar_camera_fusion" output="screen">
+        <param name="cameraInput" type="str" value="/zed/zed_node/left_raw/image_raw_color"/>
+        <param name="cameraPlane" type="double" value="0.2"/>
+        <param name="projectionScale" type="double" value="-4500"/>
+        <param name="copX" type="double" value="-0.080"/>
+        <param name="copY" type="double" value="0.0"/>
+        <param name="copZ" type="double" value="-0.02"/>
+    </node>
+</launch>
