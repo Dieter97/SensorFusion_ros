@@ -22,4 +22,4 @@ cd ../..
 catkin_make
 ```
 
-Now you can launch any of the launch files located in catkin_ws_sensorfusion/src/SensorFusion_ros/launch
+Now you can launch any of the launch files located in `catkin_ws_sensorfusion/src/SensorFusion_ros/launch`
